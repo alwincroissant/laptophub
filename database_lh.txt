@@ -1,0 +1,246 @@
+-- ============================================================
+--  LaptopHub E-Commerce Database Schema
+--  Compatible with MySQL Workbench
+-- ============================================================
+
+CREATE DATABASE IF NOT EXISTS laptophub;
+USE laptophub;
+
+-- ============================================================
+--  MODULE 1 – USER ACCOUNT MANAGEMENT
+-- ============================================================
+
+CREATE TABLE roles (
+    role_id     TINYINT UNSIGNED    NOT NULL AUTO_INCREMENT,
+    role_name   VARCHAR(30)         NOT NULL,
+    PRIMARY KEY (role_id),
+    UNIQUE KEY uq_role_name (role_name)
+);
+
+CREATE TABLE users (
+    user_id         INT UNSIGNED        NOT NULL AUTO_INCREMENT,
+    role_id         TINYINT UNSIGNED    NOT NULL,
+    full_name       VARCHAR(100)        NOT NULL,
+    email           VARCHAR(150)        NOT NULL,
+    password_hash   VARCHAR(255)        NOT NULL,
+    contact_number  VARCHAR(20)         NULL,
+    address         TEXT                NULL,
+    is_active       TINYINT(1)          NOT NULL DEFAULT 1,
+    created_at      DATETIME            NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME            NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id),
+    UNIQUE KEY uq_email (email),
+    CONSTRAINT fk_users_role FOREIGN KEY (role_id) REFERENCES roles (role_id)
+);
+
+-- ============================================================
+--  MODULE 2 & 3 – PRODUCT, CATEGORY & BRAND MANAGEMENT
+-- ============================================================
+
+CREATE TABLE categories (
+    category_id     SMALLINT UNSIGNED   NOT NULL AUTO_INCREMENT,
+    name            VARCHAR(60)         NOT NULL,
+    description     TEXT                NULL,
+    is_active       TINYINT(1)          NOT NULL DEFAULT 1,
+    PRIMARY KEY (category_id),
+    UNIQUE KEY uq_category_name (name)
+);
+
+CREATE TABLE brands (
+    brand_id    SMALLINT UNSIGNED   NOT NULL AUTO_INCREMENT,
+    name        VARCHAR(60)         NOT NULL,
+    is_active   TINYINT(1)          NOT NULL DEFAULT 1,
+    PRIMARY KEY (brand_id),
+    UNIQUE KEY uq_brand_name (name)
+);
+
+CREATE TABLE products (
+    product_id          INT UNSIGNED        NOT NULL AUTO_INCREMENT,
+    category_id         SMALLINT UNSIGNED   NOT NULL,
+    brand_id            SMALLINT UNSIGNED   NOT NULL,
+    name                VARCHAR(150)        NOT NULL,
+    description         TEXT                NULL,
+    compatibility       TEXT                NULL,
+    price               DECIMAL(10,2)       NOT NULL,
+    stock_qty           INT UNSIGNED        NOT NULL DEFAULT 0,
+    low_stock_threshold INT UNSIGNED        NOT NULL DEFAULT 5,
+    is_archived         TINYINT(1)          NOT NULL DEFAULT 0,
+    created_at          DATETIME            NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          DATETIME            NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (product_id),
+    CONSTRAINT fk_products_category FOREIGN KEY (category_id) REFERENCES categories (category_id),
+    CONSTRAINT fk_products_brand    FOREIGN KEY (brand_id)    REFERENCES brands (brand_id)
+);
+
+CREATE TABLE product_images (
+    image_id    INT UNSIGNED    NOT NULL AUTO_INCREMENT,
+    product_id  INT UNSIGNED    NOT NULL,
+    image_url   VARCHAR(255)    NOT NULL,
+    sort_order  TINYINT         NOT NULL DEFAULT 0,
+    PRIMARY KEY (image_id),
+    CONSTRAINT fk_product_images_product FOREIGN KEY (product_id) REFERENCES products (product_id) ON DELETE CASCADE
+);
+
+-- ============================================================
+--  MODULE 4 – SHOPPING CART MANAGEMENT
+-- ============================================================
+
+CREATE TABLE carts (
+    cart_id     INT UNSIGNED    NOT NULL AUTO_INCREMENT,
+    user_id     INT UNSIGNED    NOT NULL,
+    created_at  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (cart_id),
+    UNIQUE KEY uq_cart_user (user_id),
+    CONSTRAINT fk_carts_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
+);
+
+CREATE TABLE cart_items (
+    cart_item_id    INT UNSIGNED        NOT NULL AUTO_INCREMENT,
+    cart_id         INT UNSIGNED        NOT NULL,
+    product_id      INT UNSIGNED        NOT NULL,
+    quantity        SMALLINT UNSIGNED   NOT NULL DEFAULT 1,
+    PRIMARY KEY (cart_item_id),
+    UNIQUE KEY uq_cart_product (cart_id, product_id),
+    CONSTRAINT fk_cart_items_cart    FOREIGN KEY (cart_id)    REFERENCES carts (cart_id)       ON DELETE CASCADE,
+    CONSTRAINT fk_cart_items_product FOREIGN KEY (product_id) REFERENCES products (product_id) ON DELETE CASCADE
+);
+
+-- ============================================================
+--  MODULE 5 – ORDER & CHECKOUT MANAGEMENT
+-- ============================================================
+
+CREATE TABLE order_statuses (
+    status_id   TINYINT UNSIGNED    NOT NULL AUTO_INCREMENT,
+    status_name VARCHAR(30)         NOT NULL,
+    PRIMARY KEY (status_id),
+    UNIQUE KEY uq_status_name (status_name)
+);
+
+CREATE TABLE payment_methods (
+    payment_method_id   TINYINT UNSIGNED    NOT NULL AUTO_INCREMENT,
+    method_name         VARCHAR(50)         NOT NULL,
+    PRIMARY KEY (payment_method_id),
+    UNIQUE KEY uq_method_name (method_name)
+);
+
+CREATE TABLE orders (
+    order_id            INT UNSIGNED        NOT NULL AUTO_INCREMENT,
+    user_id             INT UNSIGNED        NOT NULL,
+    payment_method_id   TINYINT UNSIGNED    NOT NULL,
+    status_id           TINYINT UNSIGNED    NOT NULL,
+    shipping_address    TEXT                NOT NULL,
+    placed_at           DATETIME            NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          DATETIME            NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (order_id),
+    CONSTRAINT fk_orders_user           FOREIGN KEY (user_id)           REFERENCES users (user_id),
+    CONSTRAINT fk_orders_payment_method FOREIGN KEY (payment_method_id) REFERENCES payment_methods (payment_method_id),
+    CONSTRAINT fk_orders_status         FOREIGN KEY (status_id)         REFERENCES order_statuses (status_id)
+);
+
+CREATE TABLE order_items (
+    order_item_id   INT UNSIGNED        NOT NULL AUTO_INCREMENT,
+    order_id        INT UNSIGNED        NOT NULL,
+    product_id      INT UNSIGNED        NOT NULL,
+    quantity        SMALLINT UNSIGNED   NOT NULL,
+    unit_price      DECIMAL(10,2)       NOT NULL,   -- price snapshot at time of purchase
+    PRIMARY KEY (order_item_id),
+    CONSTRAINT fk_order_items_order   FOREIGN KEY (order_id)   REFERENCES orders (order_id)   ON DELETE CASCADE,
+    CONSTRAINT fk_order_items_product FOREIGN KEY (product_id) REFERENCES products (product_id)
+);
+
+CREATE TABLE order_status_logs (
+    log_id      INT UNSIGNED        NOT NULL AUTO_INCREMENT,
+    order_id    INT UNSIGNED        NOT NULL,
+    status_id   TINYINT UNSIGNED    NOT NULL,
+    changed_by  INT UNSIGNED        NOT NULL,
+    changed_at  DATETIME            NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    note        TEXT                NULL,
+    PRIMARY KEY (log_id),
+    CONSTRAINT fk_order_logs_order  FOREIGN KEY (order_id)  REFERENCES orders (order_id)        ON DELETE CASCADE,
+    CONSTRAINT fk_order_logs_status FOREIGN KEY (status_id) REFERENCES order_statuses (status_id),
+    CONSTRAINT fk_order_logs_user   FOREIGN KEY (changed_by) REFERENCES users (user_id)
+);
+
+-- ============================================================
+--  MODULE 6 – INVENTORY & RESTOCKING MANAGEMENT
+-- ============================================================
+
+CREATE TABLE suppliers (
+    supplier_id     INT UNSIGNED    NOT NULL AUTO_INCREMENT,
+    name            VARCHAR(100)    NOT NULL,
+    contact_name    VARCHAR(100)    NULL,
+    contact_email   VARCHAR(150)    NULL,
+    contact_phone   VARCHAR(20)     NULL,
+    address         TEXT            NULL,
+    is_active       TINYINT(1)      NOT NULL DEFAULT 1,
+    PRIMARY KEY (supplier_id),
+    UNIQUE KEY uq_supplier_name (name)
+);
+
+CREATE TABLE supplier_products (
+    supplier_product_id INT UNSIGNED    NOT NULL AUTO_INCREMENT,
+    supplier_id         INT UNSIGNED    NOT NULL,
+    product_id          INT UNSIGNED    NOT NULL,
+    PRIMARY KEY (supplier_product_id),
+    UNIQUE KEY uq_supplier_product (supplier_id, product_id),
+    CONSTRAINT fk_sup_prod_supplier FOREIGN KEY (supplier_id) REFERENCES suppliers (supplier_id) ON DELETE CASCADE,
+    CONSTRAINT fk_sup_prod_product  FOREIGN KEY (product_id)  REFERENCES products (product_id)  ON DELETE CASCADE
+);
+
+CREATE TABLE restock_transactions (
+    restock_id      INT UNSIGNED    NOT NULL AUTO_INCREMENT,
+    product_id      INT UNSIGNED    NOT NULL,
+    supplier_id     INT UNSIGNED    NOT NULL,
+    managed_by      INT UNSIGNED    NOT NULL,
+    quantity_added  INT UNSIGNED    NOT NULL,
+    unit_cost       DECIMAL(10,2)   NOT NULL,   -- expense = quantity_added * unit_cost
+    restocked_at    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    notes           TEXT            NULL,
+    PRIMARY KEY (restock_id),
+    CONSTRAINT fk_restock_product  FOREIGN KEY (product_id)  REFERENCES products (product_id),
+    CONSTRAINT fk_restock_supplier FOREIGN KEY (supplier_id) REFERENCES suppliers (supplier_id),
+    CONSTRAINT fk_restock_manager  FOREIGN KEY (managed_by)  REFERENCES users (user_id)
+);
+
+-- ============================================================
+--  MODULE 7 – REVIEW & RATING SYSTEM
+-- ============================================================
+
+CREATE TABLE reviews (
+    review_id       INT UNSIGNED        NOT NULL AUTO_INCREMENT,
+    product_id      INT UNSIGNED        NOT NULL,
+    user_id         INT UNSIGNED        NOT NULL,
+    order_item_id   INT UNSIGNED        NOT NULL,   -- enforces verified purchase
+    rating          TINYINT UNSIGNED    NOT NULL,   -- 1 to 5
+    title           VARCHAR(150)        NULL,
+    body            TEXT                NULL,
+    is_visible      TINYINT(1)          NOT NULL DEFAULT 1,
+    created_at      DATETIME            NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (review_id),
+    UNIQUE KEY uq_review_order_item (order_item_id),    -- one review per purchased item
+    CONSTRAINT fk_reviews_product    FOREIGN KEY (product_id)    REFERENCES products (product_id),
+    CONSTRAINT fk_reviews_user       FOREIGN KEY (user_id)       REFERENCES users (user_id),
+    CONSTRAINT fk_reviews_order_item FOREIGN KEY (order_item_id) REFERENCES order_items (order_item_id),
+    CONSTRAINT chk_rating CHECK (rating BETWEEN 1 AND 5)
+);
+
+-- ============================================================
+--  SEED DATA – Lookup Tables
+-- ============================================================
+
+INSERT INTO roles (role_name) VALUES
+    ('Admin'),
+    ('InventoryManager'),
+    ('Customer');
+
+INSERT INTO order_statuses (status_name) VALUES
+    ('Pending'),
+    ('Processing'),
+    ('Shipped'),
+    ('Delivered'),
+    ('Cancelled');
+
+INSERT INTO payment_methods (method_name) VALUES
+    ('Cash on Delivery'),
+    ('Online Payment');
