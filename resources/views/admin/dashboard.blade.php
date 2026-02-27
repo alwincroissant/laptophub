@@ -355,10 +355,10 @@
 
   <nav class="sidebar-nav">
     <div class="nav-section-label">Overview</div>
-    <a href="#" class="nav-link active"><i class="bi bi-grid-1x2"></i> Dashboard</a>
+    <a href="{{ route('admin.dashboard') }}" class="nav-link active"><i class="bi bi-grid-1x2"></i> Dashboard</a>
 
     <div class="nav-section-label">Catalog</div>
-    <a href="#" class="nav-link"><i class="bi bi-laptop"></i> Products</a>
+    <a href="{{ route('admin.product.index') }}" class="nav-link"><i class="bi bi-laptop"></i> Products</a>
     <a href="#" class="nav-link"><i class="bi bi-tags"></i> Categories</a>
     <a href="#" class="nav-link"><i class="bi bi-award"></i> Brands</a>
 
