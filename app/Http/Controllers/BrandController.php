@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Brand;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class BrandController extends Controller
 {
@@ -12,7 +13,26 @@ class BrandController extends Controller
      */
     public function index()
     {
-        //
+        $search = trim((string) request('search', ''));
+        $status = (string) request('status', 'all');
+
+        $query = Brand::query();
+
+        if ($status === 'trashed') {
+            $query->onlyTrashed();
+        } elseif ($status === 'active') {
+            $query->where('is_active', 1);
+        } elseif ($status === 'inactive') {
+            $query->where('is_active', 0);
+        }
+
+        if ($search !== '') {
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        $brands = $query->orderByDesc('brand_id')->paginate(12)->withQueryString();
+
+        return view('admin.brand.index', compact('brands', 'search', 'status'));
     }
 
     /**
@@ -20,7 +40,7 @@ class BrandController extends Controller
      */
     public function create()
     {
-        //
+        return view('admin.brand.create');
     }
 
     /**
@@ -28,7 +48,17 @@ class BrandController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:60|unique:brands,name',
+            'description' => 'nullable|string',
+            'is_active' => 'nullable|boolean',
+        ]);
+
+        $validated['is_active'] = $request->boolean('is_active');
+
+        Brand::create($validated);
+
+        return redirect()->route('admin.brand.index')->with('success', 'Brand created successfully.');
     }
 
     /**
@@ -44,7 +74,7 @@ class BrandController extends Controller
      */
     public function edit(Brand $brand)
     {
-        //
+        return view('admin.brand.edit', compact('brand'));
     }
 
     /**
@@ -52,7 +82,22 @@ class BrandController extends Controller
      */
     public function update(Request $request, Brand $brand)
     {
-        //
+        $validated = $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:60',
+                Rule::unique('brands', 'name')->ignore($brand->brand_id, 'brand_id'),
+            ],
+            'description' => 'nullable|string',
+            'is_active' => 'nullable|boolean',
+        ]);
+
+        $validated['is_active'] = $request->boolean('is_active');
+
+        $brand->update($validated);
+
+        return redirect()->route('admin.brand.index')->with('success', 'Brand updated successfully.');
     }
 
     /**
@@ -60,6 +105,27 @@ class BrandController extends Controller
      */
     public function destroy(Brand $brand)
     {
-        //
+        $brand->delete();
+
+        return redirect()->route('admin.brand.index')->with('success', 'Brand soft deleted successfully.');
+    }
+
+    public function restore(int $brandId)
+    {
+        $brand = Brand::withTrashed()->findOrFail($brandId);
+
+        if ($brand->trashed()) {
+            $brand->restore();
+        }
+
+        return redirect()->route('admin.brand.index', ['status' => 'trashed'])->with('success', 'Brand recovered successfully.');
+    }
+
+    public function forceDestroy(int $brandId)
+    {
+        $brand = Brand::withTrashed()->findOrFail($brandId);
+        $brand->forceDelete();
+
+        return redirect()->route('admin.brand.index')->with('success', 'Brand deleted permanently.');
     }
 }

@@ -6,6 +6,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -34,14 +35,20 @@ class ProductController extends Controller
             ->select([
                 'products.product_id',
                 'products.name',
+                'products.image_url',
                 'products.price',
                 'products.stock_qty',
                 'products.low_stock_threshold',
                 'products.is_archived',
                 'products.updated_at',
+                'products.deleted_at',
                 'categories.name as category_name',
                 'brands.name as brand_name',
             ]);
+
+        if ($status === 'trashed') {
+            $productsQuery->onlyTrashed();
+        }
 
         if ($search !== '') {
             $productsQuery->where(function ($query) use ($search) {
@@ -101,6 +108,7 @@ class ProductController extends Controller
             'brand_id' => 'required|integer|exists:brands,brand_id',
             'description' => 'nullable|string',
             'compatibility' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'price' => 'required|numeric|min:0',
             'stock_qty' => 'required|integer|min:0',
             'low_stock_threshold' => 'required|integer|min:0',
@@ -108,6 +116,12 @@ class ProductController extends Controller
         ]);
 
         $validated['is_archived'] = $request->boolean('is_archived');
+
+        if ($request->hasFile('image')) {
+            $validated['image_url'] = Storage::url($request->file('image')->store('products', 'public'));
+        }
+
+        unset($validated['image']);
 
         Product::create($validated);
 
@@ -119,9 +133,35 @@ class ProductController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Product $product)
+    public function show(int $productId)
     {
-        //
+        $product = Product::withTrashed()
+            ->leftJoin('categories', 'products.category_id', '=', 'categories.category_id')
+            ->leftJoin('brands', 'products.brand_id', '=', 'brands.brand_id')
+            ->select([
+                'products.product_id',
+                'products.category_id',
+                'products.brand_id',
+                'products.name',
+                'products.description',
+                'products.compatibility',
+                'products.image_url',
+                'products.price',
+                'products.stock_qty',
+                'products.low_stock_threshold',
+                'products.is_archived',
+                'products.created_at',
+                'products.updated_at',
+                'products.deleted_at',
+                'categories.name as category_name',
+                'brands.name as brand_name',
+            ])
+            ->where('products.product_id', $productId)
+            ->firstOrFail();
+
+        return view('admin.product.show', [
+            'product' => $product,
+        ]);
     }
 
     /**
@@ -150,6 +190,7 @@ class ProductController extends Controller
             'brand_id' => 'required|integer|exists:brands,brand_id',
             'description' => 'nullable|string',
             'compatibility' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'price' => 'required|numeric|min:0',
             'stock_qty' => 'required|integer|min:0',
             'low_stock_threshold' => 'required|integer|min:0',
@@ -157,6 +198,16 @@ class ProductController extends Controller
         ]);
 
         $validated['is_archived'] = $request->boolean('is_archived');
+
+        if ($request->hasFile('image')) {
+            if ($product->image_url && str_starts_with($product->image_url, '/storage/')) {
+                Storage::disk('public')->delete(substr($product->image_url, strlen('/storage/')));
+            }
+
+            $validated['image_url'] = Storage::url($request->file('image')->store('products', 'public'));
+        }
+
+        unset($validated['image']);
 
         $product->update($validated);
 
@@ -174,6 +225,30 @@ class ProductController extends Controller
 
         return redirect()
             ->route('admin.product.index')
-            ->with('success', 'Product deleted successfully.');
+            ->with('success', 'Product soft deleted successfully.');
+    }
+
+    public function restore(int $productId)
+    {
+        $product = Product::withTrashed()->findOrFail($productId);
+
+        if ($product->trashed()) {
+            $product->restore();
+        }
+
+        return redirect()
+            ->route('admin.product.index', ['status' => 'trashed'])
+            ->with('success', 'Product recovered successfully.');
+    }
+
+    public function forceDestroy(int $productId)
+    {
+        $product = Product::withTrashed()->findOrFail($productId);
+
+        $product->forceDelete();
+
+        return redirect()
+            ->route('admin.product.index')
+            ->with('success', 'Product deleted permanently.');
     }
 }

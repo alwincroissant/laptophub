@@ -11,12 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('brands', function (Blueprint $table) {
-            $table->smallIncrements('brand_id');
-            $table->string('name', 60)->unique('uq_brand_name');
-            $table->text('description')->nullable();
-            $table->boolean('is_active')->default(true);
-            $table->softDeletes();
+        Schema::table('products', function (Blueprint $table) {
+            $table->softDeletes()->after('updated_at');
         });
     }
 
@@ -25,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('brands');
+        Schema::table('products', function (Blueprint $table) {
+            $table->dropSoftDeletes();
+        });
     }
 };

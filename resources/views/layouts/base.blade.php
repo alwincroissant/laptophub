@@ -53,6 +53,7 @@
 <body>
 	@yield('content')
 
+	@unless(View::hasSection('hide_footer'))
 	<footer class="site-footer">
 		<div class="container">
 			<div class="row g-4">
@@ -107,6 +108,7 @@
 			</div>
 		</div>
 	</footer>
+	@endunless
 
 	@stack('scripts')
 </body>

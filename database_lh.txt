@@ -42,6 +42,7 @@ CREATE TABLE categories (
     name            VARCHAR(60)         NOT NULL,
     description     TEXT                NULL,
     is_active       TINYINT(1)          NOT NULL DEFAULT 1,
+    deleted_at      DATETIME            NULL,
     PRIMARY KEY (category_id),
     UNIQUE KEY uq_category_name (name)
 );
@@ -49,7 +50,9 @@ CREATE TABLE categories (
 CREATE TABLE brands (
     brand_id    SMALLINT UNSIGNED   NOT NULL AUTO_INCREMENT,
     name        VARCHAR(60)         NOT NULL,
+    description TEXT                NULL,
     is_active   TINYINT(1)          NOT NULL DEFAULT 1,
+    deleted_at  DATETIME            NULL,
     PRIMARY KEY (brand_id),
     UNIQUE KEY uq_brand_name (name)
 );
@@ -61,12 +64,14 @@ CREATE TABLE products (
     name                VARCHAR(150)        NOT NULL,
     description         TEXT                NULL,
     compatibility       TEXT                NULL,
+    image_url           VARCHAR(255)        NULL,
     price               DECIMAL(10,2)       NOT NULL,
     stock_qty           INT UNSIGNED        NOT NULL DEFAULT 0,
     low_stock_threshold INT UNSIGNED        NOT NULL DEFAULT 5,
     is_archived         TINYINT(1)          NOT NULL DEFAULT 0,
     created_at          DATETIME            NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          DATETIME            NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at          DATETIME            NULL,
     PRIMARY KEY (product_id),
     CONSTRAINT fk_products_category FOREIGN KEY (category_id) REFERENCES categories (category_id),
     CONSTRAINT fk_products_brand    FOREIGN KEY (brand_id)    REFERENCES brands (brand_id)

@@ -1,86 +1,37 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LaptopHub — Create Product</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet"/>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+@extends('layouts.admin')
+
+@section('title', 'LaptopHub — Create Product')
+@section('active_nav', 'product')
+@section('page_title', 'Create Product')
+@section('page_subtitle', 'Add a new product to the catalog.')
+
+@section('admin_styles')
     <link href="{{ asset('css/admin-product-form.css') }}" rel="stylesheet"/>
-</head>
-<body>
-<aside class="sidebar">
-    <div class="sidebar-brand">
-        <div class="wordmark">LaptopHub <span class="badge-admin">Admin</span></div>
-        <div class="mt-1" style="font-size:.75rem;color:rgba(255,255,255,.4)">Management Console</div>
-    </div>
+@endsection
 
-    <nav class="sidebar-nav">
-        <div class="nav-section-label">Overview</div>
-        <a href="{{ route('admin.dashboard') }}" class="nav-link"><i class="bi bi-grid-1x2"></i> Dashboard</a>
+@section('topbar_actions')
+    <a href="{{ route('admin.product.index') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Back to Products
+    </a>
+@endsection
 
-        <div class="nav-section-label">Catalog</div>
-        <a href="{{ route('admin.product.index') }}" class="nav-link active"><i class="bi bi-laptop"></i> Products</a>
-
-        <a href="#" class="nav-link"><i class="bi bi-tags"></i> Categories</a>
-        <a href="#" class="nav-link"><i class="bi bi-award"></i> Brands</a>
-
-        <div class="nav-section-label">Commerce</div>
-        <a href="#" class="nav-link"><i class="bi bi-bag-check"></i> Orders</a>
-        <a href="#" class="nav-link"><i class="bi bi-cart3"></i> Carts</a>
-        <a href="#" class="nav-link"><i class="bi bi-star-half"></i> Reviews</a>
-
-        <div class="nav-section-label">Operations</div>
-        <a href="#" class="nav-link"><i class="bi bi-box-seam"></i> Inventory</a>
-        <a href="#" class="nav-link"><i class="bi bi-truck"></i> Suppliers</a>
-        <a href="#" class="nav-link"><i class="bi bi-arrow-repeat"></i> Restock Log</a>
-
-        <div class="nav-section-label">Users</div>
-        <a href="#" class="nav-link"><i class="bi bi-people"></i> All Users</a>
-        <a href="#" class="nav-link"><i class="bi bi-shield-lock"></i> Roles</a>
-
-        <div class="nav-section-label">System</div>
-        <a href="#" class="nav-link"><i class="bi bi-gear"></i> Settings</a>
-    </nav>
-
-    <div class="sidebar-footer d-flex align-items-center gap-2">
-        <div class="avatar">AD</div>
-        <div>
-            <div style="color:#fff;font-weight:500;font-size:.8rem">Admin User</div>
-            <div>admin@laptophub.ph</div>
+@section('admin_content')
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
-    </div>
-</aside>
-
-<div class="main">
-    <div class="topbar">
-        <div>
-            <h1>Create Product</h1>
-            <p class="sub">Add a new product to the catalog.</p>
-        </div>
-        <a href="{{ route('admin.product.index') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i> Back to Products
-        </a>
-    </div>
-
-    <div class="content">
-        @if ($errors->any())
-            <div class="alert alert-danger">
-                <ul class="mb-0">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+    @endif
 
         <div class="form-card">
             <div class="card-header">
                 <h5>Product Information</h5>
             </div>
             <div class="card-body">
-                <form method="POST" action="{{ route('admin.product.store') }}" class="row g-3">
+                <form method="POST" action="{{ route('admin.product.store') }}" class="row g-3" enctype="multipart/form-data">
                     @csrf
 
                     <div class="col-md-6">
@@ -124,6 +75,12 @@
                     </div>
 
                     <div class="col-12">
+                        <label class="form-label" for="image">Product Image</label>
+                        <input id="image" name="image" type="file" class="form-control" accept="image/png,image/jpeg,image/webp">
+                        <small class="text-muted">Optional. JPG, PNG, or WEBP up to 2MB.</small>
+                    </div>
+
+                    <div class="col-12">
                         <label class="form-label" for="description">Description</label>
                         <textarea id="description" name="description" class="form-control" rows="3">{{ old('description') }}</textarea>
                     </div>
@@ -147,7 +104,4 @@
                 </form>
             </div>
         </div>
-    </div>
-</div>
-</body>
-</html>
+@endsection

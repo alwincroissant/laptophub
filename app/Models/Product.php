@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'products';
     protected $primaryKey = 'product_id';
     public $timestamps = true;
@@ -16,6 +19,7 @@ class Product extends Model
         'name',
         'description',
         'compatibility',
+        'image_url',
         'price',
         'stock_qty',
         'low_stock_threshold',
