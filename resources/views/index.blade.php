@@ -629,8 +629,16 @@
   <div class="d-flex gap-2 align-items-center">
     <a href="#features" class="nav-pill outline d-none d-md-inline">Features</a>
     <a href="#catalog"  class="nav-pill outline d-none d-md-inline">Catalog</a>
-    <a href="#login"    class="nav-pill outline">Log In</a>
-    <a href="#register" class="nav-pill solid">Register</a>
+    @guest
+      <a href="#login"    class="nav-pill outline">Log In</a>
+      <a href="#register" class="nav-pill solid">Register</a>
+    @endguest
+    @auth
+      <form action="{{ route('logout') }}" method="post" class="m-0">
+        @csrf
+        <button type="submit" class="nav-pill solid" style="border:none;cursor:pointer">Sign Out</button>
+      </form>
+    @endauth
   </div>
 </nav>
 
@@ -655,9 +663,16 @@
       Browse hundreds of laptops, components &amp; accessories from the brands you trust — with fast delivery, verified reviews, and unbeatable prices.
     </p>
     <div class="hero-ctas">
-      <a href="#register" class="btn-hero-primary">
-        <i class="bi bi-person-plus me-2"></i>Create Free Account
-      </a>
+      @guest
+        <a href="#register" class="btn-hero-primary">
+          <i class="bi bi-person-plus me-2"></i>Create Free Account
+        </a>
+      @endguest
+      @auth
+        <a href="#catalog" class="btn-hero-primary">
+          <i class="bi bi-bag-check me-2"></i>Continue Shopping
+        </a>
+      @endauth
       <a href="#catalog" class="btn-hero-secondary">
         Browse Catalog <i class="bi bi-arrow-right ms-1"></i>
       </a>
@@ -681,6 +696,7 @@
   <!-- RIGHT: AUTH FORMS -->
   <div class="hero-right">
 
+    @guest
     <div class="form-panel">
 
       @if (session('success'))
@@ -818,6 +834,43 @@
       </div>
 
     </div><!-- /form-panel -->
+    @endguest
+
+    @auth
+    <div class="form-panel">
+      <div class="form-panel-title">Welcome back.</div>
+      <div class="form-panel-sub">Signed in as {{ auth()->user()->full_name }}.</div>
+
+      @if (session('success'))
+        <div class="auth-success">{{ session('success') }}</div>
+      @endif
+
+      @if (session('error'))
+        <div class="auth-alert">{{ session('error') }}</div>
+      @endif
+
+      <div style="background:var(--cream);border:1px solid var(--border);border-radius:5px;padding:1rem;margin-bottom:1rem">
+        <div style="font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:.6rem">Customer View</div>
+        <div style="font-size:.86rem;color:var(--ink);line-height:1.6">
+          You are logged in. Use quick actions below to continue browsing products.
+        </div>
+      </div>
+
+      <a href="#catalog" class="btn-submit" style="display:block;text-align:center;text-decoration:none;margin-bottom:.75rem">
+        <i class="bi bi-grid me-2"></i>Browse Catalog
+      </a>
+      <a href="#features" class="btn-submit" style="display:block;text-align:center;text-decoration:none;margin-bottom:1rem;background:var(--blue)">
+        <i class="bi bi-stars me-2"></i>View Features
+      </a>
+
+      <form action="{{ route('logout') }}" method="post">
+        @csrf
+        <button type="submit" class="btn-submit" style="background:transparent;color:var(--ink);border:1.5px solid var(--border)">
+          <i class="bi bi-box-arrow-right me-2"></i>Sign Out
+        </button>
+      </form>
+    </div>
+    @endauth
   </div><!-- /hero-right -->
 </section>
 
