@@ -625,10 +625,17 @@
      NAVBAR
 ════════════════════════════════════ -->
 <nav class="navbar d-flex align-items-center justify-content-between">
-  <a href="#" class="navbar-brand">Laptop<span>Hub</span></a>
+  <a href="{{ route('index') }}" class="navbar-brand">Laptop<span>Hub</span></a>
   <div class="d-flex gap-2 align-items-center">
-    <a href="#features" class="nav-pill outline d-none d-md-inline">Features</a>
-    <a href="#catalog"  class="nav-pill outline d-none d-md-inline">Catalog</a>
+    @auth
+      <a href="{{ route('index') }}" class="nav-pill outline d-none d-md-inline">Home</a>
+      <a href="{{ route('customer.shop.index') }}" class="nav-pill outline d-none d-md-inline">Shop</a>
+      <a href="{{ route('customer.cart.index') }}" class="nav-pill outline d-none d-md-inline">Cart</a>
+      <a href="{{ route('customer.orders.index') }}" class="nav-pill outline d-none d-md-inline">Orders</a>
+    @else
+      <a href="#features" class="nav-pill outline d-none d-md-inline">Features</a>
+      <a href="#catalog"  class="nav-pill outline d-none d-md-inline">Catalog</a>
+    @endauth
     @guest
       <a href="#login"    class="nav-pill outline">Log In</a>
       <a href="#register" class="nav-pill solid">Register</a>
@@ -669,7 +676,7 @@
         </a>
       @endguest
       @auth
-        <a href="#catalog" class="btn-hero-primary">
+        <a href="{{ route('customer.shop.index') }}" class="btn-hero-primary">
           <i class="bi bi-bag-check me-2"></i>Continue Shopping
         </a>
       @endauth
@@ -856,11 +863,11 @@
         </div>
       </div>
 
-      <a href="#catalog" class="btn-submit" style="display:block;text-align:center;text-decoration:none;margin-bottom:.75rem">
+      <a href="{{ route('customer.shop.index') }}" class="btn-submit" style="display:block;text-align:center;text-decoration:none;margin-bottom:.75rem">
         <i class="bi bi-grid me-2"></i>Browse Catalog
       </a>
-      <a href="#features" class="btn-submit" style="display:block;text-align:center;text-decoration:none;margin-bottom:1rem;background:var(--blue)">
-        <i class="bi bi-stars me-2"></i>View Features
+      <a href="{{ route('customer.orders.index') }}" class="btn-submit" style="display:block;text-align:center;text-decoration:none;margin-bottom:1rem;background:var(--blue)">
+        <i class="bi bi-receipt me-2"></i>My Orders
       </a>
 
       <form action="{{ route('logout') }}" method="post">

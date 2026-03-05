@@ -30,4 +30,14 @@ class Product extends Model
         'price' => 'decimal:2',
         'is_archived' => 'boolean',
     ];
+
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class, 'brand_id', 'brand_id');
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class, 'category_id', 'category_id');
+    }
 }

@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('products', function (Blueprint $table) {
-            $table->softDeletes()->after('updated_at');
-        });
+        if (!Schema::hasColumn('products', 'deleted_at')) {
+            Schema::table('products', function (Blueprint $table) {
+                $table->softDeletes()->after('updated_at');
+            });
+        }
     }
 
     /**
@@ -21,8 +23,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('products', function (Blueprint $table) {
-            $table->dropSoftDeletes();
-        });
+        if (Schema::hasColumn('products', 'deleted_at')) {
+            Schema::table('products', function (Blueprint $table) {
+                $table->dropSoftDeletes();
+            });
+        }
     }
 };

@@ -6,6 +6,10 @@ use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ShopController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\OrderController;
 
 
 Route::get('/', function () {
@@ -19,6 +23,27 @@ Route::get('/index', function () {
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/register', [AuthController::class, 'register'])->name('register');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Customer Routes (Authenticated Users)
+Route::middleware(['auth'])->prefix('customer')->name('customer.')->group(function () {
+    // Shop routes
+    Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
+    Route::get('/search', [ShopController::class, 'search'])->name('shop.search');
+
+    // Cart routes
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
+    Route::post('/cart/update-qty', [CartController::class, 'updateQty'])->name('cart.update-qty');
+    Route::post('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
+
+    // Checkout routes
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
+
+    // Orders routes
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+});
 
 Route::middleware(['auth.admin', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');

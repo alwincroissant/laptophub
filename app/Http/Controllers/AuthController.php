@@ -86,7 +86,8 @@ class AuthController extends Controller
 
         return match ($roleName) {
             'Admin', 'InventoryManager' => route('admin.dashboard'),
-            default => route('index'),
+            'Customer' => route('customer.shop.index'),
+            default => route('customer.shop.index'),
         };
     }
 }
