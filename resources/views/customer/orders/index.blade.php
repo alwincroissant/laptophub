@@ -201,9 +201,44 @@
       border-radius: 4px;
     }
 
-    .order-item-name {
+    .order-item-main {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
       flex: 1;
+      min-width: 0;
+    }
+
+    .order-item-thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: 4px;
+      background: #fff;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .order-item-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .order-item-thumb-fallback {
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .order-item-name {
       font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .order-item-qty {
@@ -339,7 +374,16 @@
           <div class="order-items">
             @foreach($order->items as $item)
               <div class="order-item-row">
-                <div class="order-item-name">{{ $item->product->name }}</div>
+                <div class="order-item-main">
+                  <div class="order-item-thumb">
+                    @if($item->product->image_url)
+                      <img src="{{ $item->product->image_url }}" alt="{{ $item->product->name }}">
+                    @else
+                      <span class="order-item-thumb-fallback"><i class="bi bi-image"></i></span>
+                    @endif
+                  </div>
+                  <div class="order-item-name">{{ $item->product->name }}</div>
+                </div>
                 <div class="order-item-qty">× {{ $item->quantity }}</div>
                 <div class="order-item-price">₱{{ number_format($item->unit_price * $item->quantity, 2) }}</div>
               </div>

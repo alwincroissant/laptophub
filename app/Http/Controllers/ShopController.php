@@ -14,39 +14,59 @@ class ShopController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Product::query();
+        $query = Product::query()->with(['brand', 'category']);
+
+        $search = trim((string) $request->input('search', ''));
+        $selectedBrands = array_map('intval', (array) $request->input('brand', []));
+        $selectedCategories = array_map('intval', (array) $request->input('category', []));
+        $selectedPrices = (array) $request->input('price', []);
+
+        // Only include active, non-archived products
+        $query->where('is_archived', false);
+
+        if ($search !== '') {
+            $query->where(function ($productQuery) use ($search) {
+                $productQuery->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhereHas('brand', function ($brandQuery) use ($search) {
+                        $brandQuery->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('category', function ($categoryQuery) use ($search) {
+                        $categoryQuery->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
 
         // Filter by brand
-        if ($request->filled('brand')) {
-            $brands = is_array($request->brand) ? $request->brand : [$request->brand];
-            $query->whereIn('brand_id', $brands);
+        if (! empty($selectedBrands)) {
+            $query->whereIn('brand_id', $selectedBrands);
         }
 
         // Filter by category
-        if ($request->filled('category')) {
-            $categories = is_array($request->category) ? $request->category : [$request->category];
-            $query->whereIn('category_id', $categories);
+        if (! empty($selectedCategories)) {
+            $query->whereIn('category_id', $selectedCategories);
         }
 
         // Filter by price range
-        if ($request->filled('price')) {
-            $priceRanges = is_array($request->price) ? $request->price : [$request->price];
-            foreach ($priceRanges as $range) {
-                switch ($range) {
-                    case 'budget':
-                        $query->orWhereBetween('price', [0, 30000]);
-                        break;
-                    case 'mid':
-                        $query->orWhereBetween('price', [30000, 70000]);
-                        break;
-                    case 'premium':
-                        $query->orWhereBetween('price', [70000, 150000]);
-                        break;
-                    case 'luxury':
-                        $query->orWhere('price', '>', 150000);
-                        break;
+        if (! empty($selectedPrices)) {
+            $query->where(function ($priceQuery) use ($selectedPrices) {
+                foreach ($selectedPrices as $range) {
+                    switch ($range) {
+                        case 'budget':
+                            $priceQuery->orWhereBetween('price', [0, 30000]);
+                            break;
+                        case 'mid':
+                            $priceQuery->orWhereBetween('price', [30000, 70000]);
+                            break;
+                        case 'premium':
+                            $priceQuery->orWhereBetween('price', [70000, 150000]);
+                            break;
+                        case 'luxury':
+                            $priceQuery->orWhere('price', '>', 150000);
+                            break;
+                    }
                 }
-            }
+            });
         }
 
         // Sorting
@@ -65,15 +85,22 @@ class ShopController extends Controller
                 $query->orderBy('created_at', 'desc');
         }
 
-        // Only include active, non-archived products
-        $query->where('is_archived', false);
+        $products = $query->paginate(12)->withQueryString();
 
-        $products = $query->paginate(12);
+        // Get brands/categories for filter
+        $brands = Brand::orderBy('name')->get();
+        $categories = Category::orderBy('name')->get();
 
-        // Get brands for filter
-        $brands = Brand::all();
-
-        return view('customer.shop.index', compact('products', 'brands'));
+        return view('customer.shop.index', compact(
+            'products',
+            'brands',
+            'categories',
+            'search',
+            'selectedBrands',
+            'selectedCategories',
+            'selectedPrices',
+            'sort'
+        ));
     }
 
     /**
@@ -93,8 +120,34 @@ class ShopController extends Controller
 
         $query->where('is_archived', false);
         $products = $query->paginate(12);
-        $brands = Brand::all();
+        $brands = Brand::orderBy('name')->get();
+        $categories = Category::orderBy('name')->get();
 
-        return view('customer.shop.index', compact('products', 'brands'));
+        return view('customer.shop.index', [
+            'products' => $products,
+            'brands' => $brands,
+            'categories' => $categories,
+            'search' => (string) $request->get('q', ''),
+            'selectedBrands' => [],
+            'selectedCategories' => [],
+            'selectedPrices' => [],
+            'sort' => 'newest',
+        ]);
+    }
+
+    /**
+     * Display detailed product information.
+     */
+    public function show(int $productId)
+    {
+        $product = Product::query()
+            ->with(['brand', 'category'])
+            ->where('product_id', $productId)
+            ->where('is_archived', false)
+            ->firstOrFail();
+
+        return view('customer.shop.show', [
+            'product' => $product,
+        ]);
     }
 }

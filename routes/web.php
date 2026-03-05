@@ -28,6 +28,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::middleware(['auth'])->prefix('customer')->name('customer.')->group(function () {
     // Shop routes
     Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
+    Route::get('/shop/{productId}', [ShopController::class, 'show'])->name('shop.show');
     Route::get('/search', [ShopController::class, 'search'])->name('shop.search');
 
     // Cart routes

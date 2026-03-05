@@ -113,68 +113,6 @@
       pointer-events: none;
     }
 
-    /* ── PRICE SLIDER ── */
-    .price-slider-container {
-      padding: 1rem 0;
-    }
-
-    .price-values {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: .75rem;
-      font-size: .85rem;
-      color: var(--ink);
-      font-weight: 600;
-    }
-
-    .slider-wrapper {
-      position: relative;
-      height: 6px;
-      background: var(--border);
-      border-radius: 3px;
-      margin-bottom: 1.5rem;
-    }
-
-    .slider-track {
-      position: absolute;
-      height: 6px;
-      background: var(--red);
-      border-radius: 3px;
-    }
-
-    input[type="range"] {
-      position: absolute;
-      width: 100%;
-      height: 6px;
-      background: transparent;
-      pointer-events: none;
-      -webkit-appearance: none;
-      top: 0;
-    }
-
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: var(--red);
-      cursor: pointer;
-      pointer-events: auto;
-      border: 2px solid #fff;
-      box-shadow: 0 2px 6px rgba(0,0,0,.2);
-    }
-
-    input[type="range"]::-moz-range-thumb {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: var(--red);
-      cursor: pointer;
-      pointer-events: auto;
-      border: 2px solid #fff;
-      box-shadow: 0 2px 6px rgba(0,0,0,.2);
-    }
-
     /* ── FILTERS SIDEBAR ── */
     .filters-panel {
       background: #fff;
@@ -221,6 +159,37 @@
       flex: 1;
     }
 
+    .filter-actions {
+      display: flex;
+      gap: .5rem;
+      margin-top: 1rem;
+    }
+
+    .btn-filter {
+      width: 100%;
+      border: none;
+      border-radius: 4px;
+      background: var(--red);
+      color: #fff;
+      padding: .65rem .8rem;
+      font-size: .82rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-clear {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: #fff;
+      color: var(--ink);
+      padding: .65rem .8rem;
+      font-size: .82rem;
+      font-weight: 600;
+      text-align: center;
+      text-decoration: none;
+    }
+
     /* ── PRODUCTS GRID ── */
     .product-card {
       background: #fff;
@@ -242,14 +211,25 @@
 
     .product-card .img-area {
       background: var(--cream);
-      padding: 2rem;
+      height: 220px;
       text-align: center;
-      font-size: 3rem;
       border-bottom: 1px solid var(--border);
-      flex-grow: 1;
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
+    }
+
+    .product-card .img-area img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .product-card .img-fallback {
+      font-size: 2rem;
+      color: var(--muted);
     }
 
     .product-card .card-body {
@@ -316,6 +296,26 @@
       background: var(--red-dk);
     }
 
+    .btn-view {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      border: 1px solid var(--blue);
+      color: var(--blue);
+      background: #fff;
+      border-radius: 4px;
+      padding: .72rem;
+      font-size: .85rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background .15s;
+    }
+
+    .btn-view:hover {
+      background: rgba(26, 58, 92, .05);
+    }
+
     /* ── SORT & VIEW ── */
     .shop-controls {
       display: flex;
@@ -334,6 +334,17 @@
       background: #fff;
       color: var(--ink);
       cursor: pointer;
+    }
+
+    .btn-sort {
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: #fff;
+      color: var(--ink);
+      padding: .58rem .85rem;
+      font-size: .82rem;
+      font-weight: 600;
+      margin-left: .4rem;
     }
 
     .view-count {
@@ -371,38 +382,29 @@
     <div class="row">
       <!-- Sidebar Filters -->
       <div class="col-lg-3">
-        <div class="filters-panel">
-          <!-- Search Bar -->
+        <form method="GET" action="{{ route('customer.shop.index') }}" class="filters-panel">
+          <input type="hidden" name="sort" value="{{ $sort }}">
+
           <div class="search-bar">
-            <input type="text" id="searchInput" class="search-input" placeholder="Search products...">
+            <input type="text" name="search" class="search-input" placeholder="Search products..." value="{{ $search }}">
             <i class="bi bi-search search-icon"></i>
           </div>
 
           <div class="filter-group">
             <label class="filter-title">Category</label>
-            <div class="filter-option">
-              <input type="checkbox" id="cat-laptops" name="category" value="laptops">
-              <label for="cat-laptops">Laptops</label>
-            </div>
-            <div class="filter-option">
-              <input type="checkbox" id="cat-gaming" name="category" value="gaming">
-              <label for="cat-gaming">Gaming</label>
-            </div>
-            <div class="filter-option">
-              <input type="checkbox" id="cat-components" name="category" value="components">
-              <label for="cat-components">Components</label>
-            </div>
-            <div class="filter-option">
-              <input type="checkbox" id="cat-accessories" name="category" value="accessories">
-              <label for="cat-accessories">Accessories</label>
-            </div>
+            @foreach($categories as $category)
+              <div class="filter-option">
+                <input type="checkbox" id="cat-{{ $category->category_id }}" name="category[]" value="{{ $category->category_id }}" {{ in_array($category->category_id, $selectedCategories, true) ? 'checked' : '' }}>
+                <label for="cat-{{ $category->category_id }}">{{ $category->name }}</label>
+              </div>
+            @endforeach
           </div>
 
           <div class="filter-group">
             <label class="filter-title">Brand</label>
             @foreach($brands as $brand)
               <div class="filter-option">
-                <input type="checkbox" id="brand-{{ $brand->brand_id }}" name="brand" value="{{ $brand->brand_id }}">
+                <input type="checkbox" id="brand-{{ $brand->brand_id }}" name="brand[]" value="{{ $brand->brand_id }}" {{ in_array($brand->brand_id, $selectedBrands, true) ? 'checked' : '' }}>
                 <label for="brand-{{ $brand->brand_id }}">{{ $brand->name }}</label>
               </div>
             @endforeach
@@ -410,19 +412,29 @@
 
           <div class="filter-group">
             <label class="filter-title">Price Range</label>
-            <div class="price-slider-container">
-              <div class="price-values">
-                <span id="minPrice">₱0</span>
-                <span id="maxPrice">₱200,000</span>
-              </div>
-              <div class="slider-wrapper">
-                <div class="slider-track" id="sliderTrack"></div>
-                <input type="range" id="rangeMin" min="0" max="200000" value="0" step="1000">
-                <input type="range" id="rangeMax" min="0" max="200000" value="200000" step="1000">
-              </div>
+            <div class="filter-option">
+              <input type="checkbox" id="price-budget" name="price[]" value="budget" {{ in_array('budget', $selectedPrices, true) ? 'checked' : '' }}>
+              <label for="price-budget">Budget (₱0 - ₱30,000)</label>
+            </div>
+            <div class="filter-option">
+              <input type="checkbox" id="price-mid" name="price[]" value="mid" {{ in_array('mid', $selectedPrices, true) ? 'checked' : '' }}>
+              <label for="price-mid">Mid Range (₱30,000 - ₱70,000)</label>
+            </div>
+            <div class="filter-option">
+              <input type="checkbox" id="price-premium" name="price[]" value="premium" {{ in_array('premium', $selectedPrices, true) ? 'checked' : '' }}>
+              <label for="price-premium">Premium (₱70,000 - ₱150,000)</label>
+            </div>
+            <div class="filter-option">
+              <input type="checkbox" id="price-luxury" name="price[]" value="luxury" {{ in_array('luxury', $selectedPrices, true) ? 'checked' : '' }}>
+              <label for="price-luxury">Luxury (₱150,000+)</label>
             </div>
           </div>
-        </div>
+
+          <div class="filter-actions">
+            <button type="submit" class="btn-filter">Apply</button>
+            <a href="{{ route('customer.shop.index') }}" class="btn-clear">Clear</a>
+          </div>
+        </form>
       </div>
 
       <!-- Products Grid -->
@@ -432,12 +444,26 @@
             Showing <strong>{{ $products->count() }}</strong> products
           </div>
           <div class="sort-control">
-            <select onchange="location.href = this.value">
-              <option value="{{ route('customer.shop.index') }}">Sort by: Newest</option>
-              <option value="{{ route('customer.shop.index', ['sort' => 'price-asc']) }}">Price: Low to High</option>
-              <option value="{{ route('customer.shop.index', ['sort' => 'price-desc']) }}">Price: High to Low</option>
-              <option value="{{ route('customer.shop.index', ['sort' => 'popular']) }}">Most Popular</option>
-            </select>
+            <form method="GET" action="{{ route('customer.shop.index') }}" class="d-flex align-items-center">
+              <input type="hidden" name="search" value="{{ $search }}">
+              @foreach($selectedCategories as $categoryId)
+                <input type="hidden" name="category[]" value="{{ $categoryId }}">
+              @endforeach
+              @foreach($selectedBrands as $brandId)
+                <input type="hidden" name="brand[]" value="{{ $brandId }}">
+              @endforeach
+              @foreach($selectedPrices as $priceRange)
+                <input type="hidden" name="price[]" value="{{ $priceRange }}">
+              @endforeach
+
+              <select name="sort">
+                <option value="newest" {{ $sort === 'newest' ? 'selected' : '' }}>Sort by: Newest</option>
+                <option value="price-asc" {{ $sort === 'price-asc' ? 'selected' : '' }}>Price: Low to High</option>
+                <option value="price-desc" {{ $sort === 'price-desc' ? 'selected' : '' }}>Price: High to Low</option>
+                <option value="popular" {{ $sort === 'popular' ? 'selected' : '' }}>Most Popular</option>
+              </select>
+              <button type="submit" class="btn-sort">Sort</button>
+            </form>
           </div>
         </div>
 
@@ -446,12 +472,21 @@
             @foreach($products as $product)
               <div class="col-12 col-sm-6 col-lg-4">
                 <div class="product-card">
-                  <div class="img-area">💻</div>
+                  <div class="img-area">
+                    @if($product->image_url)
+                      <img src="{{ $product->image_url }}" alt="{{ $product->name }}">
+                    @else
+                      <span class="img-fallback"><i class="bi bi-image"></i></span>
+                    @endif
+                  </div>
                   <div class="card-body">
                     <div class="brand-tag">{{ $product->brand->name ?? 'Unbranded' }}</div>
                     <h5>{{ $product->name }}</h5>
                     <div class="stars mb-1">★★★★★</div>
                     <div class="price">₱{{ number_format($product->price, 2) }}</div>
+                    <a href="{{ route('customer.shop.show', $product->product_id) }}" class="btn-view mb-2">
+                      <i class="bi bi-eye me-1"></i> View
+                    </a>
                     <form action="{{ route('customer.cart.add') }}" method="post">
                       @csrf
                       <input type="hidden" name="product_id" value="{{ $product->product_id }}">
@@ -487,70 +522,5 @@
     </div>
   </div>
 </section>
-
-@push('scripts')
-<script>
-  // Price Range Slider
-  const rangeMin = document.getElementById('rangeMin');
-  const rangeMax = document.getElementById('rangeMax');
-  const minPriceDisplay = document.getElementById('minPrice');
-  const maxPriceDisplay = document.getElementById('maxPrice');
-  const sliderTrack = document.getElementById('sliderTrack');
-
-  function formatPrice(value) {
-    return '₱' + parseInt(value).toLocaleString();
-  }
-
-  function updateSlider() {
-    let minVal = parseInt(rangeMin.value);
-    let maxVal = parseInt(rangeMax.value);
-
-    // Prevent crossing
-    if (maxVal - minVal < 5000) {
-      if (event.target === rangeMin) {
-        rangeMin.value = maxVal - 5000;
-        minVal = maxVal - 5000;
-      } else {
-        rangeMax.value = minVal + 5000;
-        maxVal = minVal + 5000;
-      }
-    }
-
-    // Update display
-    minPriceDisplay.textContent = formatPrice(minVal);
-    maxPriceDisplay.textContent = formatPrice(maxVal);
-
-    // Update track
-    const percentMin = (minVal / rangeMin.max) * 100;
-    const percentMax = (maxVal / rangeMax.max) * 100;
-    sliderTrack.style.left = percentMin + '%';
-    sliderTrack.style.width = (percentMax - percentMin) + '%';
-  }
-
-  rangeMin.addEventListener('input', updateSlider);
-  rangeMax.addEventListener('input', updateSlider);
-
-  // Initialize
-  updateSlider();
-
-  // Search functionality
-  const searchInput = document.getElementById('searchInput');
-  searchInput.addEventListener('input', function() {
-    const searchTerm = this.value.toLowerCase();
-    const productCards = document.querySelectorAll('.product-card');
-    
-    productCards.forEach(card => {
-      const productName = card.querySelector('h5').textContent.toLowerCase();
-      const brandName = card.querySelector('.brand-tag').textContent.toLowerCase();
-      
-      if (productName.includes(searchTerm) || brandName.includes(searchTerm)) {
-        card.closest('.col-12').style.display = '';
-      } else {
-        card.closest('.col-12').style.display = 'none';
-      }
-    });
-  });
-</script>
-@endpush
 
 @endsection

@@ -112,7 +112,19 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2rem;
+      overflow: hidden;
+    }
+
+    .cart-item-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .cart-item-img-fallback {
+      font-size: 1.5rem;
+      color: var(--muted);
     }
 
     .cart-item-details h5 {
@@ -365,7 +377,13 @@
                   checked
                 >
               </div>
-              <div class="cart-item-img">💻</div>
+              <div class="cart-item-img">
+                @if($item->product->image_url)
+                  <img src="{{ $item->product->image_url }}" alt="{{ $item->product->name }}">
+                @else
+                  <span class="cart-item-img-fallback"><i class="bi bi-image"></i></span>
+                @endif
+              </div>
               <div class="cart-item-details">
                 <h5>{{ $item->product->name }}</h5>
                 <p>{{ $item->product->brand->name ?? 'Unbranded' }}</p>

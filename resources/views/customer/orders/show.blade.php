@@ -196,6 +196,37 @@
       font-weight: 600;
     }
 
+    .item-product {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+    }
+
+    .item-thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .item-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .item-thumb-fallback {
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
     .item-price {
       color: var(--red);
       font-weight: 600;
@@ -390,7 +421,18 @@
             <tbody>
               @foreach($order->items as $item)
                 <tr>
-                  <td class="item-name">{{ $item->product->name }}</td>
+                  <td>
+                    <div class="item-product">
+                      <div class="item-thumb">
+                        @if($item->product->image_url)
+                          <img src="{{ $item->product->image_url }}" alt="{{ $item->product->name }}">
+                        @else
+                          <span class="item-thumb-fallback"><i class="bi bi-image"></i></span>
+                        @endif
+                      </div>
+                      <span class="item-name">{{ $item->product->name }}</span>
+                    </div>
+                  </td>
                   <td style="text-align: center">{{ $item->quantity }}</td>
                   <td style="text-align: right">₱{{ number_format($item->unit_price, 2) }}</td>
                   <td style="text-align: right" class="item-price">₱{{ number_format($item->unit_price * $item->quantity, 2) }}</td>
