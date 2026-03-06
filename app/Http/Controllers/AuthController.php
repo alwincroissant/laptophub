@@ -20,9 +20,15 @@ class AuthController extends Controller
 
         $user = User::where('email', $credentials['email'])->first();
 
-        if (! $user || ! Hash::check($credentials['password'], $user->password_hash) || ! $user->is_active) {
+        if (! $user || ! Hash::check($credentials['password'], $user->password_hash)) {
             return back()
                 ->withErrors(['email' => 'Invalid credentials.'], 'login')
+                ->withInput($request->only('email', 'remember'));
+        }
+
+        if (! $user->is_active) {
+            return back()
+                ->withErrors(['email' => 'Your account is deactivated. Please contact support.'], 'login')
                 ->withInput($request->only('email', 'remember'));
         }
 

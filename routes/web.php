@@ -6,26 +6,87 @@ use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\AdminOrderController;
+use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AdminAccountController;
+use App\Models\Brand;
+use App\Models\Product;
+use Illuminate\Support\Facades\DB;
 
+$landingPage = function () {
+    $featuredBrands = Brand::query()
+        ->where('is_active', true)
+        ->whereHas('products', function ($query) {
+            $query->where('is_archived', false)
+                ->whereNull('deleted_at');
+        })
+        ->orderBy('name')
+        ->limit(12)
+        ->get(['brand_id', 'name']);
 
-Route::get('/', function () {
-    return view('index');
-});
+    $featuredProducts = Product::query()
+        ->leftJoin('brands', 'products.brand_id', '=', 'brands.brand_id')
+        ->leftJoin('reviews', function ($join) {
+            $join->on('products.product_id', '=', 'reviews.product_id')
+                ->where('reviews.is_visible', true);
+        })
+        ->where('products.is_archived', false)
+        ->whereNull('products.deleted_at')
+        ->where('products.stock_qty', '>', 0)
+        ->groupBy(
+            'products.product_id',
+            'products.name',
+            'products.image_url',
+            'products.price',
+            'products.stock_qty',
+            'products.low_stock_threshold',
+            'products.created_at',
+            'brands.name'
+        )
+        ->orderByDesc(DB::raw('COALESCE(AVG(reviews.rating), 0)'))
+        ->orderByDesc(DB::raw('COUNT(reviews.review_id)'))
+        ->orderByDesc('products.created_at')
+        ->limit(8)
+        ->get([
+            'products.product_id',
+            'products.name',
+            'products.image_url',
+            'products.price',
+            'products.stock_qty',
+            'products.low_stock_threshold',
+            'products.created_at',
+            DB::raw('COALESCE(brands.name, "Unbranded") as brand_name'),
+            DB::raw('COALESCE(ROUND(AVG(reviews.rating), 1), 0) as avg_rating'),
+            DB::raw('COUNT(reviews.review_id) as review_count'),
+        ]);
 
-Route::get('/index', function () {
-    return view('index');
-})->name('index');
+    return view('index', [
+        'featuredBrands' => $featuredBrands,
+        'featuredProducts' => $featuredProducts,
+    ]);
+};
+
+Route::get('/', $landingPage);
+
+Route::get('/index', $landingPage)->name('index');
+
+Route::view('/terms-and-conditions', 'legal.terms')->name('legal.terms');
+Route::view('/privacy-policy', 'legal.privacy')->name('legal.privacy');
 
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/register', [AuthController::class, 'register'])->name('register');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Customer Routes (Authenticated Users)
-Route::middleware(['auth'])->prefix('customer')->name('customer.')->group(function () {
+Route::middleware(['auth', 'active'])->prefix('customer')->name('customer.')->group(function () {
     // Shop routes
     Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
     Route::get('/shop/{productId}', [ShopController::class, 'show'])->name('shop.show');
@@ -40,14 +101,33 @@ Route::middleware(['auth'])->prefix('customer')->name('customer.')->group(functi
     // Checkout routes
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
+    Route::post('/checkout/addresses', [CheckoutController::class, 'storeAddress'])->name('checkout.addresses.store');
+    Route::post('/checkout/addresses/{address}/default', [CheckoutController::class, 'setDefaultAddress'])->name('checkout.addresses.default');
+    Route::post('/checkout/addresses/{address}/delete', [CheckoutController::class, 'destroyAddress'])->name('checkout.addresses.delete');
 
     // Orders routes
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+
+    // Account routes
+    Route::get('/account/profile', [AccountController::class, 'profile'])->name('account.profile');
+    Route::post('/account/profile', [AccountController::class, 'updateProfile'])->name('account.profile.update');
+    Route::get('/account/password', [AccountController::class, 'password'])->name('account.password');
+    Route::post('/account/password', [AccountController::class, 'updatePassword'])->name('account.password.update');
+    Route::get('/account/addresses', [AccountController::class, 'addresses'])->name('account.addresses');
+    Route::post('/account/addresses', [AccountController::class, 'storeAddress'])->name('account.addresses.store');
+    Route::put('/account/addresses/{address}', [AccountController::class, 'updateAddress'])->name('account.addresses.update');
+    Route::post('/account/addresses/{address}/default', [AccountController::class, 'setDefaultAddress'])->name('account.addresses.default');
+    Route::delete('/account/addresses/{address}', [AccountController::class, 'destroyAddress'])->name('account.addresses.destroy');
 });
 
-Route::middleware(['auth.admin', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth.admin', 'active', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/account/profile', [AdminAccountController::class, 'profile'])->name('account.profile');
+    Route::post('/account/profile', [AdminAccountController::class, 'updateProfile'])->name('account.profile.update');
+    Route::post('/account/password', [AdminAccountController::class, 'updatePassword'])->name('account.password.update');
+
     Route::get('/products', [ProductController::class, 'index'])->name('product.index');
     Route::get('/products/create', [ProductController::class, 'create'])->name('product.create');
     Route::get('/products/{productId}', [ProductController::class, 'show'])->name('product.show');
@@ -75,5 +155,41 @@ Route::middleware(['auth.admin', 'admin'])->prefix('admin')->name('admin.')->gro
     Route::delete('/brands/{brand}', [BrandController::class, 'destroy'])->name('brand.destroy');
     Route::patch('/brands/{brandId}/restore', [BrandController::class, 'restore'])->name('brand.restore');
     Route::delete('/brands/{brandId}/force', [BrandController::class, 'forceDestroy'])->name('brand.force-destroy');
+
+    Route::get('/orders', [AdminOrderController::class, 'index'])->name('order.index');
+    Route::get('/orders/{orderId}', [AdminOrderController::class, 'show'])->name('order.show');
+    Route::patch('/orders/{orderId}/status', [AdminOrderController::class, 'updateStatus'])->name('order.update-status');
+
+    Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
+    Route::get('/inventory/create', [InventoryController::class, 'create'])->name('inventory.create');
+    Route::post('/inventory', [InventoryController::class, 'store'])->name('inventory.store');
+    Route::get('/inventory/{inventory}/edit', [InventoryController::class, 'edit'])->name('inventory.edit');
+    Route::put('/inventory/{inventory}', [InventoryController::class, 'update'])->name('inventory.update');
+    Route::delete('/inventory/{inventory}', [InventoryController::class, 'destroy'])->name('inventory.destroy');
+
+    Route::get('/suppliers', [SupplierController::class, 'index'])->name('supplier.index');
+    Route::get('/suppliers/create', [SupplierController::class, 'create'])->name('supplier.create');
+    Route::post('/suppliers', [SupplierController::class, 'store'])->name('supplier.store');
+    Route::get('/suppliers/{supplier}/edit', [SupplierController::class, 'edit'])->name('supplier.edit');
+    Route::put('/suppliers/{supplier}', [SupplierController::class, 'update'])->name('supplier.update');
+    Route::delete('/suppliers/{supplier}', [SupplierController::class, 'destroy'])->name('supplier.destroy');
+    Route::patch('/suppliers/{supplierId}/restore', [SupplierController::class, 'restore'])->name('supplier.restore');
+    Route::delete('/suppliers/{supplierId}/force', [SupplierController::class, 'forceDestroy'])->name('supplier.force-destroy');
+
+    Route::get('/users', [UserController::class, 'index'])->name('user.index');
+    Route::get('/users/create', [UserController::class, 'create'])->name('user.create');
+    Route::post('/users', [UserController::class, 'store'])->name('user.store');
+    Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('user.edit');
+    Route::put('/users/{user}', [UserController::class, 'update'])->name('user.update');
+    Route::patch('/users/{user}/activate', [UserController::class, 'activate'])->name('user.activate');
+    Route::patch('/users/{user}/deactivate', [UserController::class, 'deactivate'])->name('user.deactivate');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('user.destroy');
+
+    Route::get('/roles', [RoleController::class, 'index'])->name('role.index');
+    Route::get('/roles/create', [RoleController::class, 'create'])->name('role.create');
+    Route::post('/roles', [RoleController::class, 'store'])->name('role.store');
+    Route::get('/roles/{role}/edit', [RoleController::class, 'edit'])->name('role.edit');
+    Route::put('/roles/{role}', [RoleController::class, 'update'])->name('role.update');
+    Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('role.destroy');
 });
 

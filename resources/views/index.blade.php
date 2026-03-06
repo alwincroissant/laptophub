@@ -540,6 +540,16 @@
       font-size: 4rem;
       border-bottom: 1px solid var(--border);
     }
+    .product-card .img-area.has-image {
+      padding: .65rem;
+    }
+    .product-card .img-area img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 4px;
+      display: block;
+    }
     .product-card .card-body { padding: 1.25rem; }
     .product-card .brand-tag {
       font-size: .65rem;
@@ -822,7 +832,7 @@
             <div class="form-check">
               <input class="form-check-input" type="checkbox" id="terms" name="terms" @checked(old('terms'))/>
               <label class="form-check-label" for="terms" style="font-size:.78rem">
-                I agree to the <a href="#" style="color:var(--blue)">Terms of Service</a> &amp; <a href="#" style="color:var(--blue)">Privacy Policy</a>
+                I agree to the <a href="{{ route('legal.terms') }}" style="color:var(--blue)" target="_blank" rel="noopener noreferrer">Terms of Service</a> &amp; <a href="{{ route('legal.privacy') }}" style="color:var(--blue)" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
               </label>
             </div>
             @error('terms', 'register')
@@ -995,18 +1005,16 @@
   <div class="container">
     <div class="text-center mb-3" style="font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);font-weight:600">Brands We Carry</div>
     <div class="d-flex flex-wrap gap-2 justify-content-center">
-      <a href="#" class="brand-pill">Apple</a>
-      <a href="#" class="brand-pill">Dell</a>
-      <a href="#" class="brand-pill">Lenovo</a>
-      <a href="#" class="brand-pill">Asus</a>
-      <a href="#" class="brand-pill">HP</a>
-      <a href="#" class="brand-pill">Acer</a>
-      <a href="#" class="brand-pill">Razer</a>
-      <a href="#" class="brand-pill">MSI</a>
-      <a href="#" class="brand-pill">Samsung</a>
-      <a href="#" class="brand-pill">Crucial</a>
-      <a href="#" class="brand-pill">Kingston</a>
-      <a href="#" class="brand-pill">Seagate</a>
+      @forelse(($featuredBrands ?? collect()) as $brand)
+        <a
+          href="{{ auth()->check() ? route('customer.shop.search', ['q' => $brand->name]) : '#login' }}"
+          class="brand-pill"
+        >
+          {{ $brand->name }}
+        </a>
+      @empty
+        <span style="font-size:.82rem;color:var(--muted)">No active brands available yet.</span>
+      @endforelse
     </div>
   </div>
 </section>
@@ -1021,53 +1029,59 @@
         <div class="section-label">Hand-picked for You</div>
         <h2 class="section-heading mb-0">Featured Products</h2>
       </div>
-      <a href="#" style="font-size:.83rem;color:var(--blue);text-decoration:underline">View all →</a>
+      <a
+        href="{{ auth()->check() ? route('customer.shop.index') : '#login' }}"
+        style="font-size:.83rem;color:var(--blue);text-decoration:underline"
+      >
+        View all →
+      </a>
     </div>
     <div class="row g-3">
-      <div class="col-12 col-sm-6 col-lg-3">
-        <a href="#" class="product-card">
-          <div class="img-area">💻</div>
-          <div class="card-body">
-            <div class="brand-tag">Apple <span class="badge-new">New</span></div>
-            <h5>MacBook Air M3 13"</h5>
-            <div class="stars mb-1">★★★★★</div>
-            <div class="price">₱79,990</div>
+      @forelse(($featuredProducts ?? collect()) as $product)
+        @php
+          $rating = max(0, min(5, (float) $product->avg_rating));
+          $ratingRounded = (int) round($rating);
+          $ratingStars = str_repeat('★', $ratingRounded) . str_repeat('☆', 5 - $ratingRounded);
+          $isNew = \Illuminate\Support\Carbon::parse($product->created_at)->greaterThan(now()->subDays(30));
+          $isLow = (int) $product->stock_qty <= (int) $product->low_stock_threshold;
+          $productHref = auth()->check()
+              ? route('customer.shop.show', $product->product_id)
+              : '#login';
+        @endphp
+        <div class="col-12 col-sm-6 col-lg-3">
+          <a href="{{ $productHref }}" class="product-card">
+            <div class="img-area {{ $product->image_url ? 'has-image' : '' }}">
+              @if($product->image_url)
+                <img src="{{ $product->image_url }}" alt="{{ $product->name }}">
+              @else
+                <i class="bi bi-laptop" aria-hidden="true"></i>
+              @endif
+            </div>
+            <div class="card-body">
+              <div class="brand-tag">
+                {{ $product->brand_name }}
+                @if($isNew)
+                  <span class="badge-new">New</span>
+                @elseif($isLow)
+                  <span class="badge-new" style="background:var(--gold)">Low</span>
+                @endif
+              </div>
+              <h5>{{ $product->name }}</h5>
+              <div class="stars mb-1" title="{{ number_format($rating, 1) }} out of 5">
+                {{ $ratingStars }}
+                <span style="font-size:.72rem;color:var(--muted)">({{ number_format((int) $product->review_count) }})</span>
+              </div>
+              <div class="price">₱{{ number_format((float) $product->price, 2) }}</div>
+            </div>
+          </a>
+        </div>
+      @empty
+        <div class="col-12">
+          <div style="border:1px dashed var(--border);background:#fff;border-radius:6px;padding:1.25rem;text-align:center;color:var(--muted)">
+            No featured products available yet.
           </div>
-        </a>
-      </div>
-      <div class="col-12 col-sm-6 col-lg-3">
-        <a href="#" class="product-card">
-          <div class="img-area">🎮</div>
-          <div class="card-body">
-            <div class="brand-tag">Asus</div>
-            <h5>ROG Strix G16 RTX 4070</h5>
-            <div class="stars mb-1">★★★★☆</div>
-            <div class="price">₱114,995</div>
-          </div>
-        </a>
-      </div>
-      <div class="col-12 col-sm-6 col-lg-3">
-        <a href="#" class="product-card">
-          <div class="img-area">🖥️</div>
-          <div class="card-body">
-            <div class="brand-tag">Dell <span class="badge-new">Hot</span></div>
-            <h5>XPS 15 9530 OLED</h5>
-            <div class="stars mb-1">★★★★★</div>
-            <div class="price">₱98,500</div>
-          </div>
-        </a>
-      </div>
-      <div class="col-12 col-sm-6 col-lg-3">
-        <a href="#" class="product-card">
-          <div class="img-area">🧠</div>
-          <div class="card-body">
-            <div class="brand-tag">Crucial</div>
-            <h5>16GB DDR5 5600MHz RAM</h5>
-            <div class="stars mb-1">★★★★☆</div>
-            <div class="price">₱3,850</div>
-          </div>
-        </a>
-      </div>
+        </div>
+      @endforelse
     </div>
   </div>
 </section>

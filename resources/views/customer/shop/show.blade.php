@@ -226,10 +226,7 @@
     <a href="{{ route('customer.shop.index') }}" class="nav-pill solid">Shop</a>
     <a href="{{ route('customer.cart.index') }}" class="nav-pill outline">Cart</a>
     <a href="{{ route('customer.orders.index') }}" class="nav-pill outline">Orders</a>
-    <form action="{{ route('logout') }}" method="post" class="m-0">
-      @csrf
-      <button type="submit" class="nav-pill solid" style="border:none;cursor:pointer">Sign Out</button>
-    </form>
+    @include('customer.partials.account-dropdown')
   </div>
 </nav>
 
@@ -238,6 +235,20 @@
     <h1>Product Information</h1>
     <p>View complete details before adding to cart</p>
   </div>
+</div>
+
+<div class="container mt-4">
+  @if(session('success'))
+    <div class="alert alert-success">{{ session('success') }}</div>
+  @endif
+
+  @if(session('error'))
+    <div class="alert alert-danger">{{ session('error') }}</div>
+  @endif
+
+  @if($errors->any())
+    <div class="alert alert-danger mb-0">{{ $errors->first() }}</div>
+  @endif
 </div>
 
 <section class="py-5">
@@ -258,7 +269,7 @@
           {{ $product->stock_qty > 0 ? 'In Stock' : 'Out of Stock' }}
         </div>
 
-        <div class="desc">{{ $product->description ?: 'No description available.' }}</div>
+        <div class="desc">{{ $product->description ?  : 'No description available.' }}</div>
 
         @if($product->compatibility)
           <div class="info-item" style="margin-bottom:1.25rem">

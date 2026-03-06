@@ -142,6 +142,11 @@
       color: #084298;
     }
 
+    .status-processing {
+      background: #cfe2ff;
+      color: #084298;
+    }
+
     .status-shipped {
       background: #e2e3e5;
       color: #41464b;
@@ -342,6 +347,17 @@
       background: rgba(26, 58, 92, .05);
     }
 
+    .btn-action.danger {
+      background: #fff;
+      color: #842029;
+      border: 1px solid #f1aeb5;
+    }
+
+    .btn-action.danger:hover {
+      background: #f8d7da;
+      border-color: #ea868f;
+    }
+
     .btn-back {
       margin-bottom: 2rem;
       padding: .75rem 1.5rem;
@@ -372,10 +388,7 @@
     <a href="{{ route('customer.shop.index') }}" class="nav-pill outline">Shop</a>
     <a href="{{ route('customer.cart.index') }}" class="nav-pill outline">Cart</a>
     <a href="{{ route('customer.orders.index') }}" class="nav-pill solid">Orders</a>
-    <form action="{{ route('logout') }}" method="post" class="m-0">
-      @csrf
-      <button type="submit" class="nav-pill solid" style="border:none;cursor:pointer">Sign Out</button>
-    </form>
+    @include('customer.partials.account-dropdown')
   </div>
 </nav>
 
@@ -387,6 +400,13 @@
 
 <section class="py-5">
   <div class="container">
+    @if(session('success'))
+      <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+      <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+
     <a href="{{ route('customer.orders.index') }}" class="btn-back">← Back to Orders</a>
 
     <div class="row g-4">
@@ -450,10 +470,6 @@
               <span>Shipping</span>
               <span>₱{{ number_format($shipping, 2) }}</span>
             </div>
-            <div class="summary-row">
-              <span>Tax (12%)</span>
-              <span>₱{{ number_format($tax, 2) }}</span>
-            </div>
             <div class="summary-row total">
               <span>Total</span>
               <span>₱{{ number_format($total, 2) }}</span>
@@ -464,15 +480,27 @@
         <!-- Timeline -->
         <div class="detail-card">
           <label class="detail-title">Order History</label>
+          @php
+            $statusName = strtolower((string) ($order->status->status_name ?? 'pending'));
+            $isCancelled = $statusName === 'cancelled';
+            $isProcessing = $statusName === 'processing';
+            $isShipped = $statusName === 'shipped';
+            $isDelivered = $statusName === 'delivered';
+          @endphp
           <div class="timeline">
             <div class="timeline-item completed">
               <div class="timeline-label">Order Placed</div>
               <div class="timeline-date">{{ $order->placed_at->format('F j, Y') }}</div>
             </div>
 
-            @if($order->status->status_id >= 2)
+            @if($isProcessing || $isShipped || $isDelivered)
               <div class="timeline-item completed">
                 <div class="timeline-label">Order Confirmed</div>
+                <div class="timeline-date">{{ $order->updated_at->format('F j, Y') }}</div>
+              </div>
+            @elseif($isCancelled)
+              <div class="timeline-item completed">
+                <div class="timeline-label">Order Cancelled</div>
                 <div class="timeline-date">{{ $order->updated_at->format('F j, Y') }}</div>
               </div>
             @else
@@ -482,29 +510,31 @@
               </div>
             @endif
 
-            @if($order->status->status_id >= 3)
-              <div class="timeline-item completed">
-                <div class="timeline-label">Shipped</div>
-                <div class="timeline-date">{{ $order->updated_at->format('F j, Y') }}</div>
-              </div>
-            @else
-              <div class="timeline-item">
-                <div class="timeline-label">Shipping Preparation</div>
-                <div class="timeline-date">We're preparing to ship</div>
-              </div>
-            @endif
+            @unless($isCancelled)
+              @if($isShipped || $isDelivered)
+                <div class="timeline-item completed">
+                  <div class="timeline-label">Shipped</div>
+                  <div class="timeline-date">{{ $order->updated_at->format('F j, Y') }}</div>
+                </div>
+              @else
+                <div class="timeline-item">
+                  <div class="timeline-label">Shipping Preparation</div>
+                  <div class="timeline-date">We're preparing to ship</div>
+                </div>
+              @endif
 
-            @if($order->status->status_id >= 4)
-              <div class="timeline-item completed">
-                <div class="timeline-label">Delivered</div>
-                <div class="timeline-date">{{ $order->updated_at->format('F j, Y') }}</div>
-              </div>
-            @else
-              <div class="timeline-item">
-                <div class="timeline-label">In Transit</div>
-                <div class="timeline-date">Your order is on its way</div>
-              </div>
-            @endif
+              @if($isDelivered)
+                <div class="timeline-item completed">
+                  <div class="timeline-label">Delivered</div>
+                  <div class="timeline-date">{{ $order->updated_at->format('F j, Y') }}</div>
+                </div>
+              @else
+                <div class="timeline-item">
+                  <div class="timeline-label">In Transit</div>
+                  <div class="timeline-date">Your order is on its way</div>
+                </div>
+              @endif
+            @endunless
           </div>
         </div>
       </div>
@@ -533,8 +563,19 @@
         <!-- Actions -->
         <div class="detail-card">
           <label class="detail-title">Actions</label>
+          @php
+            $statusName = strtolower((string) ($order->status->status_name ?? ''));
+            $canCancel = in_array($statusName, ['pending', 'processing'], true);
+          @endphp
           <div style="display: flex; flex-direction: column; gap: .75rem">
             <a href="{{ route('customer.shop.index') }}" class="btn-action" style="text-align: center; width: 100%">Continue Shopping</a>
+            @if($canCancel)
+              <form action="{{ route('customer.orders.cancel', $order->order_id) }}" method="post" style="margin:0" onsubmit="return confirm('Cancel this order? This cannot be undone.')">
+                @csrf
+                @method('PATCH')
+                <button type="submit" class="btn-action danger" style="text-align: center; width: 100%">Cancel Order</button>
+              </form>
+            @endif
             <button onclick="window.print()" class="btn-action secondary" style="text-align: center; width: 100%">Print Invoice</button>
           </div>
         </div>

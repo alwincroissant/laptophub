@@ -6,7 +6,9 @@ use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\UserAddress;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CheckoutController extends Controller
 {
@@ -46,12 +48,22 @@ class CheckoutController extends Controller
         });
 
         $shipping = $subtotal > 0 ? 200 : 0;
-        $tax = $subtotal * 0.12;
-        $total = $subtotal + $shipping + $tax;
+        $total = $subtotal + $shipping;
 
         $selectedCartItemIds = $cartItems->pluck('cart_item_id')->values();
+        $addresses = UserAddress::where('user_id', $user->user_id)
+            ->orderByDesc('is_default')
+            ->orderByDesc('updated_at')
+            ->get();
 
-        return view('customer.checkout.index', compact('cartItems', 'subtotal', 'shipping', 'tax', 'total', 'selectedCartItemIds'));
+        $selectedAddressId = (int) $request->input('selected_address_id', 0);
+        $selectedAddress = $addresses->firstWhere('address_id', $selectedAddressId)
+            ?? $addresses->firstWhere('is_default', true)
+            ?? $addresses->first();
+
+        $selectedAddressId = $selectedAddress ? (int) $selectedAddress->address_id : null;
+
+        return view('customer.checkout.index', compact('cartItems', 'subtotal', 'shipping', 'total', 'selectedCartItemIds', 'addresses', 'selectedAddressId'));
     }
 
     /**
@@ -60,13 +72,7 @@ class CheckoutController extends Controller
     public function process(Request $request)
     {
         $request->validate([
-            'full_name' => 'required|string|max:255',
-            'email' => 'required|email',
-            'phone' => 'required|string|max:20',
-            'region' => 'required|string|max:255',
-            'street_address' => 'required|string|max:255',
-            'city' => 'required|string|max:255',
-            'postal_code' => 'required|string|max:10',
+            'address_id' => 'required|integer|exists:user_addresses,address_id',
             'payment_method' => 'required|integer',
             'selected_cart_item_ids' => 'nullable|array',
             'selected_cart_item_ids.*' => 'integer|exists:cart_items,cart_item_id',
@@ -87,63 +93,198 @@ class CheckoutController extends Controller
             ->unique()
             ->values();
 
-        $cartItemsQuery = CartItem::where('cart_id', $cart->cart_id)->with('product');
+        $address = UserAddress::where('address_id', $request->address_id)
+            ->where('user_id', $user->user_id)
+            ->first();
 
-        if ($selectedCartItemIds->isNotEmpty()) {
-            $cartItemsQuery->whereIn('cart_item_id', $selectedCartItemIds);
+        if (!$address) {
+            return redirect()->back()->with('error', 'Invalid shipping address selected.');
         }
 
-        $cartItems = $cartItemsQuery->get();
-
-        if ($cartItems->isEmpty()) {
-            return redirect()->route('customer.cart.index')->with('error', 'Select at least one item to checkout.');
-        }
-
-        // Calculate totals
-        $subtotal = $cartItems->sum(function ($item) {
-            return $item->product->price * $item->quantity;
-        });
-
-        $shipping = $subtotal > 0 ? 200 : 0;
-        $tax = $subtotal * 0.12;
-        $total = $subtotal + $shipping + $tax;
-
-        // Build shipping address
-        $shippingAddress = "{$request->street_address}, {$request->city}, {$request->region} {$request->postal_code}";
+        $shippingAddress = $address->formattedAddress();
 
         try {
-            // Create order
-            $order = Order::create([
-                'user_id' => $user->user_id,
-                'payment_method_id' => $request->payment_method,
-                'status_id' => 1, // Pending status
-                'shipping_address' => $shippingAddress,
-                'placed_at' => now(),
-                'updated_at' => now()
-            ]);
+            $order = DB::transaction(function () use ($user, $request, $shippingAddress, $selectedCartItemIds) {
+                $cart = Cart::where('user_id', $user->user_id)
+                    ->lockForUpdate()
+                    ->first();
 
-            // Create order items
-            foreach ($cartItems as $cartItem) {
-                OrderItem::create([
-                    'order_id' => $order->order_id,
-                    'product_id' => $cartItem->product_id,
-                    'quantity' => $cartItem->quantity,
-                    'unit_price' => $cartItem->product->price
+                if (!$cart) {
+                    throw new \RuntimeException('Your cart is empty');
+                }
+
+                $cartItemsQuery = CartItem::where('cart_id', $cart->cart_id)
+                    ->with('product')
+                    ->lockForUpdate();
+
+                if ($selectedCartItemIds->isNotEmpty()) {
+                    $cartItemsQuery->whereIn('cart_item_id', $selectedCartItemIds);
+                }
+
+                $cartItems = $cartItemsQuery->get();
+
+                if ($cartItems->isEmpty()) {
+                    throw new \RuntimeException('Select at least one item to checkout.');
+                }
+
+                // Calculate totals from locked cart items to keep checkout atomic.
+                $subtotal = $cartItems->sum(function ($item) {
+                    return $item->product->price * $item->quantity;
+                });
+
+                $shipping = $subtotal > 0 ? 200 : 0;
+                $total = $subtotal + $shipping;
+
+                $order = Order::create([
+                    'user_id' => $user->user_id,
+                    'payment_method_id' => $request->payment_method,
+                    'status_id' => 1,
+                    'shipping_address' => $shippingAddress,
+                    'placed_at' => now(),
+                    'updated_at' => now()
                 ]);
-            }
 
-            // Remove only checked-out items from cart
-            CartItem::whereIn('cart_item_id', $cartItems->pluck('cart_item_id'))->delete();
+                foreach ($cartItems as $cartItem) {
+                    OrderItem::create([
+                        'order_id' => $order->order_id,
+                        'product_id' => $cartItem->product_id,
+                        'quantity' => $cartItem->quantity,
+                        'unit_price' => $cartItem->product->price
+                    ]);
+                }
 
-            // Delete cart if no items remain
-            if (!CartItem::where('cart_id', $cart->cart_id)->exists()) {
-                $cart->delete();
-            }
+                CartItem::whereIn('cart_item_id', $cartItems->pluck('cart_item_id'))->delete();
+
+                if (!CartItem::where('cart_id', $cart->cart_id)->exists()) {
+                    $cart->delete();
+                }
+
+                return $order;
+            }, 3);
 
             return redirect()->route('customer.orders.show', $order->order_id)
                 ->with('success', 'Order placed successfully!');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Failed to process order. Please try again.');
+        } catch (\Throwable $e) {
+            $message = $e->getMessage() ?: 'Failed to process order. Please try again.';
+
+            return redirect()->back()->with('error', $message);
         }
+    }
+
+    public function storeAddress(Request $request)
+    {
+        $request->validate([
+            'label' => 'nullable|string|max:50',
+            'recipient_name' => 'required|string|max:100',
+            'phone' => 'required|string|max:20',
+            'region' => 'required|string|max:100',
+            'city' => 'required|string|max:100',
+            'postal_code' => 'required|string|max:10',
+            'street_address' => 'required|string|max:255',
+            'set_default' => 'nullable',
+            'selected_cart_item_ids' => 'nullable|array',
+            'selected_cart_item_ids.*' => 'integer|exists:cart_items,cart_item_id',
+            'payment_method' => 'nullable|integer',
+        ]);
+
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        $setAsDefault = (bool) $request->boolean('set_default');
+
+        $address = DB::transaction(function () use ($request, $user, $setAsDefault) {
+            if ($setAsDefault || !UserAddress::where('user_id', $user->user_id)->exists()) {
+                UserAddress::where('user_id', $user->user_id)->update(['is_default' => false]);
+                $setAsDefault = true;
+            }
+
+            return UserAddress::create([
+                'user_id' => $user->user_id,
+                'label' => $request->label,
+                'recipient_name' => $request->recipient_name,
+                'phone' => $request->phone,
+                'region' => $request->region,
+                'city' => $request->city,
+                'postal_code' => $request->postal_code,
+                'street_address' => $request->street_address,
+                'is_default' => $setAsDefault,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        });
+
+        return redirect()->route('customer.checkout.index', $this->checkoutQueryParams(
+            $request,
+            ['selected_address_id' => $address->address_id]
+        ))->with('success', 'Shipping address added.');
+    }
+
+    public function setDefaultAddress(Request $request, UserAddress $address)
+    {
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+
+        if ($address->user_id !== $user->user_id) {
+            abort(403, 'Unauthorized');
+        }
+
+        DB::transaction(function () use ($user, $address) {
+            UserAddress::where('user_id', $user->user_id)->update(['is_default' => false]);
+            $address->is_default = true;
+            $address->save();
+        });
+
+        return redirect()->route('customer.checkout.index', $this->checkoutQueryParams(
+            $request,
+            ['selected_address_id' => $address->address_id]
+        ))->with('success', 'Default address updated.');
+    }
+
+    public function destroyAddress(Request $request, UserAddress $address)
+    {
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+
+        if ($address->user_id !== $user->user_id) {
+            abort(403, 'Unauthorized');
+        }
+
+        $wasDefault = (bool) $address->is_default;
+        $address->delete();
+
+        if ($wasDefault) {
+            $nextAddress = UserAddress::where('user_id', $user->user_id)
+                ->orderByDesc('updated_at')
+                ->first();
+
+            if ($nextAddress) {
+                $nextAddress->is_default = true;
+                $nextAddress->save();
+            }
+        }
+
+        return redirect()->route('customer.checkout.index', $this->checkoutQueryParams($request))
+            ->with('success', 'Address removed.');
+    }
+
+    private function checkoutQueryParams(Request $request, array $extra = []): array
+    {
+        $selectedCartItemIds = collect($request->input('selected_cart_item_ids', []))
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $query = [];
+
+        if (!empty($selectedCartItemIds)) {
+            $query['selected_cart_item_ids'] = $selectedCartItemIds;
+        }
+
+        if ($request->filled('payment_method')) {
+            $query['payment_method'] = (int) $request->input('payment_method');
+        }
+
+        return array_merge($query, $extra);
     }
 }

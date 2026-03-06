@@ -346,6 +346,11 @@
 @endpush
 
 @section('content')
+@php
+  $selectedPaymentMethod = (int) old('payment_method', request()->query('payment_method', 1));
+  $activeAddressId = (int) old('address_id', $selectedAddressId ?? 0);
+@endphp
+
 <!-- NAVBAR -->
 <nav class="navbar d-flex align-items-center justify-content-between">
   <a href="{{ route('index') }}" class="navbar-brand">Laptop<span>Hub</span></a>
@@ -354,10 +359,7 @@
     <a href="{{ route('customer.shop.index') }}" class="nav-pill outline">Shop</a>
     <a href="{{ route('customer.cart.index') }}" class="nav-pill outline">Cart</a>
     <a href="{{ route('customer.orders.index') }}" class="nav-pill outline">Orders</a>
-    <form action="{{ route('logout') }}" method="post" class="m-0">
-      @csrf
-      <button type="submit" class="nav-pill solid" style="border:none;cursor:pointer">Sign Out</button>
-    </form>
+    @include('customer.partials.account-dropdown')
   </div>
 </nav>
 
@@ -369,6 +371,18 @@
 
 <section class="py-5">
   <div class="container">
+    @if(session('success'))
+      <div class="alert alert-success mb-3">{{ session('success') }}</div>
+    @endif
+
+    @if(session('error'))
+      <div class="alert alert-danger mb-3">{{ session('error') }}</div>
+    @endif
+
+    @if($errors->any())
+      <div class="alert alert-danger mb-3">{{ $errors->first() }}</div>
+    @endif
+
     <!-- Progress Steps -->
     <div class="checkout-steps">
       <div class="checkout-step active">
@@ -387,106 +401,191 @@
 
     <div class="row g-4">
       <div class="col-lg-8">
-        <!-- Shipping Information -->
-        <form action="{{ route('customer.checkout.process') }}" method="post" id="checkoutForm">
-          @csrf
-          @if(isset($selectedCartItemIds) && $selectedCartItemIds->count())
+        <div class="checkout-section">
+          <label class="section-title">Shipping Address</label>
+
+          @if(isset($addresses) && $addresses->count())
+            <div style="display:grid;gap:.75rem">
+              @foreach($addresses as $address)
+                <div style="border:1px solid var(--border);border-radius:6px;padding:.85rem;background:#fff">
+                  <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1rem;align-items:start;">
+                    <div style="font-size:.84rem;line-height:1.55;flex:1">
+                      <strong>{{ $address->label ?: 'Saved Address' }}</strong>
+                      @if($address->is_default)
+                        <span style="font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--red);margin-left:.35rem">Default</span>
+                      @endif
+                      @if($activeAddressId === (int) $address->address_id)
+                        <span style="font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);margin-left:.35rem">Selected</span>
+                      @endif
+                      <br>
+                      {{ $address->recipient_name }}
+                      <br>
+                      {{ $address->phone }}
+                      <br>
+                      {{ $address->street_address }}, {{ $address->city }}, {{ $address->region }} {{ $address->postal_code }}
+                    </div>
+
+                    <div style="display:flex;gap:.45rem;align-items:center;justify-content:flex-end;flex-wrap:wrap;align-self:start;">
+                      @if($activeAddressId !== (int) $address->address_id)
+                        <form action="{{ route('customer.checkout.index') }}" method="get" style="margin:0">
+                          @foreach($selectedCartItemIds as $selectedCartItemId)
+                            <input type="hidden" name="selected_cart_item_ids[]" value="{{ $selectedCartItemId }}">
+                          @endforeach
+                          <input type="hidden" name="payment_method" value="{{ $selectedPaymentMethod }}">
+                          <input type="hidden" name="selected_address_id" value="{{ $address->address_id }}">
+                          <button type="submit" class="btn-submit" style="padding:.45rem .65rem;font-size:.72rem;letter-spacing:.04em;width:auto" title="Use this address" aria-label="Use this address">
+                            <i class="bi bi-check2-circle"></i>
+                          </button>
+                        </form>
+                      @endif
+
+                      @if(!$address->is_default)
+                        <form action="{{ route('customer.checkout.addresses.default', $address->address_id) }}" method="post" style="margin:0">
+                          @csrf
+                          @foreach($selectedCartItemIds as $selectedCartItemId)
+                            <input type="hidden" name="selected_cart_item_ids[]" value="{{ $selectedCartItemId }}">
+                          @endforeach
+                          <input type="hidden" name="payment_method" value="{{ $selectedPaymentMethod }}">
+                          <button type="submit" class="btn-submit" style="padding:.45rem .65rem;font-size:.72rem;letter-spacing:.04em;width:auto" title="Set as default address" aria-label="Set as default address">
+                            <i class="bi bi-star"></i>
+                          </button>
+                        </form>
+                      @endif
+
+                      <form action="{{ route('customer.checkout.addresses.delete', $address->address_id) }}" method="post" style="margin:0" onsubmit="return confirm('Remove this address?')">
+                        @csrf
+                        @foreach($selectedCartItemIds as $selectedCartItemId)
+                          <input type="hidden" name="selected_cart_item_ids[]" value="{{ $selectedCartItemId }}">
+                        @endforeach
+                        <input type="hidden" name="payment_method" value="{{ $selectedPaymentMethod }}">
+                        <button type="submit" class="btn-submit btn-back" style="padding:.45rem .65rem;font-size:.72rem;letter-spacing:.04em;width:auto;margin-top:0" title="Delete this address" aria-label="Delete this address">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </form>
+
+                    </div>
+                  </div>
+                </div>
+              @endforeach
+            </div>
+          @else
+            <p style="font-size:.86rem;color:var(--muted);margin-bottom:0">No saved addresses yet. Add one below to continue checkout.</p>
+          @endif
+        </div>
+
+        <div class="checkout-section">
+          <label class="section-title">Add New Address</label>
+
+          <form action="{{ route('customer.checkout.addresses.store') }}" method="post">
+            @csrf
             @foreach($selectedCartItemIds as $selectedCartItemId)
               <input type="hidden" name="selected_cart_item_ids[]" value="{{ $selectedCartItemId }}">
             @endforeach
-          @endif
+            <input type="hidden" name="payment_method" value="{{ $selectedPaymentMethod }}">
 
-          <div class="checkout-section">
-            <label class="section-title">Shipping Address</label>
-            
             <div class="form-row">
               <div class="form-group">
-                <label>Full Name</label>
-                <input type="text" name="full_name" class="form-control" value="{{ auth()->user()->full_name }}" required>
+                <label>Label (Home, Office, etc.)</label>
+                <input type="text" name="label" class="form-control" value="{{ old('label') }}">
               </div>
               <div class="form-group">
-                <label>Email</label>
-                <input type="email" name="email" class="form-control" value="{{ auth()->user()->email }}" required>
+                <label>Recipient Name</label>
+                <input type="text" name="recipient_name" class="form-control" value="{{ old('recipient_name', auth()->user()->full_name) }}" required>
               </div>
             </div>
 
             <div class="form-row">
               <div class="form-group">
                 <label>Phone Number</label>
-                <input type="tel" name="phone" class="form-control" value="{{ auth()->user()->contact_number }}" required>
+                <input type="text" name="phone" class="form-control" value="{{ old('phone', auth()->user()->contact_number) }}" required>
               </div>
               <div class="form-group">
                 <label>Region</label>
-                <input type="text" name="region" class="form-control" placeholder="e.g., Metro Manila" required>
+                <input type="text" name="region" class="form-control" value="{{ old('region') }}" required>
               </div>
             </div>
 
             <div class="form-group full">
               <label>Street Address</label>
-              <input type="text" name="street_address" class="form-control" placeholder="House number, street, subdivision" required>
+              <input type="text" name="street_address" class="form-control" value="{{ old('street_address') }}" required>
             </div>
 
             <div class="form-row">
               <div class="form-group">
                 <label>City/Municipality</label>
-                <input type="text" name="city" class="form-control" required>
+                <input type="text" name="city" class="form-control" value="{{ old('city') }}" required>
               </div>
               <div class="form-group">
                 <label>Postal Code</label>
-                <input type="text" name="postal_code" class="form-control" placeholder="e.g., 1200" required>
+                <input type="text" name="postal_code" class="form-control" value="{{ old('postal_code') }}" required>
               </div>
             </div>
-          </div>
 
-          <!-- Payment Method -->
+            <div class="terms-row" style="margin-bottom:1rem">
+              <input type="checkbox" id="set-default-address" name="set_default" value="1">
+              <label for="set-default-address" class="terms-label">Set as default shipping address</label>
+            </div>
+
+            <button type="submit" class="btn-submit" style="width:auto;padding:.7rem 1rem">Save Address</button>
+          </form>
+        </div>
+
+        <form action="{{ route('customer.checkout.process') }}" method="post" id="checkoutForm">
+          @csrf
+          @foreach($selectedCartItemIds as $selectedCartItemId)
+            <input type="hidden" name="selected_cart_item_ids[]" value="{{ $selectedCartItemId }}">
+          @endforeach
+          <input type="hidden" name="address_id" value="{{ $activeAddressId }}">
+
           <div class="checkout-section">
             <label class="section-title">Payment Method</label>
-            
+
             <div class="payment-options">
               <div class="payment-option">
-                <input type="radio" id="method-cod" name="payment_method" value="1" checked>
+                <input type="radio" id="method-cod" name="payment_method" value="1" {{ $selectedPaymentMethod === 1 ? 'checked' : '' }}>
                 <label for="method-cod">
                   <i class="bi bi-cash-coin"></i> Cash on Delivery
                 </label>
               </div>
               <div class="payment-option">
-                <input type="radio" id="method-online" name="payment_method" value="2">
+                <input type="radio" id="method-online" name="payment_method" value="2" {{ $selectedPaymentMethod === 2 ? 'checked' : '' }}>
                 <label for="method-online">
                   <i class="bi bi-credit-card"></i> Online Payment
                 </label>
               </div>
             </div>
 
-            <div id="onlinePaymentFields" style="display: none;">
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Cardholder Name</label>
-                  <input type="text" name="card_name" class="form-control">
+            @if($selectedPaymentMethod === 2)
+              <div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Cardholder Name</label>
+                    <input type="text" name="card_name" class="form-control" value="{{ old('card_name') }}">
+                  </div>
+                  <div class="form-group">
+                    <label>Card Number</label>
+                    <input type="text" name="card_number" class="form-control" placeholder="1234 5678 9012 3456" value="{{ old('card_number') }}">
+                  </div>
                 </div>
-                <div class="form-group">
-                  <label>Card Number</label>
-                  <input type="text" name="card_number" class="form-control" placeholder="1234 5678 9012 3456">
-                </div>
-              </div>
 
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Expiry Date</label>
-                  <input type="text" name="card_expiry" class="form-control" placeholder="MM/YY">
-                </div>
-                <div class="form-group">
-                  <label>CVV</label>
-                  <input type="text" name="card_cvv" class="form-control" placeholder="123">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Expiry Date</label>
+                    <input type="text" name="card_expiry" class="form-control" placeholder="MM/YY" value="{{ old('card_expiry') }}">
+                  </div>
+                  <div class="form-group">
+                    <label>CVV</label>
+                    <input type="text" name="card_cvv" class="form-control" placeholder="123" value="{{ old('card_cvv') }}">
+                  </div>
                 </div>
               </div>
-            </div>
+            @endif
           </div>
 
-          <!-- Terms & Conditions -->
           <div class="terms-row">
             <input type="checkbox" id="terms" name="terms" required>
             <label for="terms" class="terms-label">
-              I agree to the <a href="#" style="color: var(--blue)">Terms and Conditions</a> and <a href="#" style="color: var(--blue)">Privacy Policy</a>
+              I agree to the <a href="{{ route('legal.terms') }}" style="color: var(--blue)" target="_blank" rel="noopener noreferrer">Terms and Conditions</a> and <a href="{{ route('legal.privacy') }}" style="color: var(--blue)" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
             </label>
           </div>
 
@@ -516,10 +615,6 @@
               <span>Shipping</span>
               <span>₱{{ number_format($shipping, 2) }}</span>
             </div>
-            <div class="summary-item">
-              <span>Tax (12%)</span>
-              <span>₱{{ number_format($tax, 2) }}</span>
-            </div>
             <div class="summary-item total">
               <span>Total</span>
               <span>₱{{ number_format($total, 2) }}</span>
@@ -533,18 +628,14 @@
 
 @push('scripts')
 <script>
-  const paymentMethodRadios = document.querySelectorAll('input[name="payment_method"]');
-  const onlinePaymentFields = document.getElementById('onlinePaymentFields');
-
-  paymentMethodRadios.forEach(radio => {
-    radio.addEventListener('change', function() {
-      if (this.value === '2') {
-        onlinePaymentFields.style.display = 'block';
-        document.querySelector('input[name="card_name"]').required = true;
-      } else {
-        onlinePaymentFields.style.display = 'none';
-        document.querySelector('input[name="card_name"]').required = false;
+  document.querySelectorAll('input[name="payment_method"]').forEach((radio) => {
+    radio.addEventListener('change', function () {
+      const url = new URL(window.location.href);
+      url.searchParams.set('payment_method', this.value);
+      if ({{ (int) $activeAddressId }} > 0) {
+        url.searchParams.set('selected_address_id', '{{ (int) $activeAddressId }}');
       }
+      window.location.href = url.toString();
     });
   });
 </script>

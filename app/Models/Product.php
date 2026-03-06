@@ -40,4 +40,14 @@ class Product extends Model
     {
         return $this->belongsTo(Category::class, 'category_id', 'category_id');
     }
+
+    public function supplierProducts()
+    {
+        return $this->hasMany(SupplierProduct::class, 'product_id', 'product_id');
+    }
+
+    public function suppliers()
+    {
+        return $this->belongsToMany(Supplier::class, 'supplier_products', 'product_id', 'supplier_id');
+    }
 }

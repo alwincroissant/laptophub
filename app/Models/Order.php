@@ -43,4 +43,9 @@ class Order extends Model
     {
         return $this->belongsTo(OrderStatus::class, 'status_id', 'status_id');
     }
+
+    public function statusLogs()
+    {
+        return $this->hasMany(OrderStatusLog::class, 'order_id', 'order_id');
+    }
 }

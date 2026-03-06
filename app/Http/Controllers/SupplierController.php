@@ -2,64 +2,167 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Product;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class SupplierController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $search = trim((string) $request->input('search', ''));
+        $status = (string) $request->input('status', 'all');
+
+        $query = Supplier::query();
+
+        if ($status === 'trashed') {
+            $query->onlyTrashed();
+        }
+
+        if ($search !== '') {
+            $query->where(function ($subQuery) use ($search) {
+                $subQuery->where('name', 'like', "%{$search}%")
+                    ->orWhere('contact_name', 'like', "%{$search}%")
+                    ->orWhere('contact_email', 'like', "%{$search}%")
+                    ->orWhere('contact_phone', 'like', "%{$search}%");
+            });
+        }
+
+        if ($status === 'active') {
+            $query->where('is_active', true);
+        } elseif ($status === 'inactive') {
+            $query->where('is_active', false);
+        }
+
+        $suppliers = $query
+            ->withCount('products')
+            ->orderBy('name')
+            ->paginate(12)
+            ->withQueryString();
+
+        return view('admin.supplier.index', [
+            'suppliers' => $suppliers,
+            'search' => $search,
+            'status' => $status,
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        $products = Product::query()
+            ->where('is_archived', false)
+            ->orderBy('name')
+            ->get(['product_id', 'name']);
+
+        return view('admin.supplier.create', ['products' => $products]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:100', 'unique:suppliers,name'],
+            'contact_name' => ['nullable', 'string', 'max:100'],
+            'contact_email' => ['nullable', 'email', 'max:150'],
+            'contact_phone' => ['nullable', 'string', 'max:20'],
+            'address' => ['nullable', 'string'],
+            'is_active' => ['nullable', 'boolean'],
+            'product_ids' => ['nullable', 'array'],
+            'product_ids.*' => ['integer', 'exists:products,product_id'],
+        ]);
+
+        $validated['is_active'] = $request->boolean('is_active');
+
+        $productIds = collect($request->input('product_ids', []))
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        DB::transaction(function () use ($validated, $productIds) {
+            $supplier = Supplier::create($validated);
+            $supplier->products()->sync($productIds);
+        });
+
+        return redirect()->route('admin.supplier.index')->with('success', 'Supplier created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Supplier $supplier)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Supplier $supplier)
     {
-        //
+        $products = Product::query()
+            ->where('is_archived', false)
+            ->orderBy('name')
+            ->get(['product_id', 'name']);
+
+        $selectedProductIds = $supplier->products()->pluck('products.product_id')->all();
+
+        return view('admin.supplier.edit', [
+            'supplier' => $supplier,
+            'products' => $products,
+            'selectedProductIds' => $selectedProductIds,
+        ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Supplier $supplier)
     {
-        //
+        $validated = $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('suppliers', 'name')->ignore($supplier->supplier_id, 'supplier_id'),
+            ],
+            'contact_name' => ['nullable', 'string', 'max:100'],
+            'contact_email' => ['nullable', 'email', 'max:150'],
+            'contact_phone' => ['nullable', 'string', 'max:20'],
+            'address' => ['nullable', 'string'],
+            'is_active' => ['nullable', 'boolean'],
+            'product_ids' => ['nullable', 'array'],
+            'product_ids.*' => ['integer', 'exists:products,product_id'],
+        ]);
+
+        $validated['is_active'] = $request->boolean('is_active');
+
+        $productIds = collect($request->input('product_ids', []))
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        DB::transaction(function () use ($supplier, $validated, $productIds) {
+            $supplier->update($validated);
+            $supplier->products()->sync($productIds);
+        });
+
+        return redirect()->route('admin.supplier.index')->with('success', 'Supplier updated successfully.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Supplier $supplier)
     {
-        //
+        $supplier->delete();
+
+        return redirect()->route('admin.supplier.index')->with('success', 'Supplier soft deleted successfully.');
+    }
+
+    public function restore(int $supplierId)
+    {
+        $supplier = Supplier::withTrashed()->findOrFail($supplierId);
+
+        if ($supplier->trashed()) {
+            $supplier->restore();
+        }
+
+        return redirect()->route('admin.supplier.index', ['status' => 'trashed'])->with('success', 'Supplier restored successfully.');
+    }
+
+    public function forceDestroy(int $supplierId)
+    {
+        $supplier = Supplier::withTrashed()->findOrFail($supplierId);
+        $supplier->forceDelete();
+
+        return redirect()->route('admin.supplier.index')->with('success', 'Supplier permanently deleted.');
     }
 }

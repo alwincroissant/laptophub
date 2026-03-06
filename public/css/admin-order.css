@@ -1,0 +1,40 @@
+.status-badge {
+  display: inline-block;
+  font-size: .65rem;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  padding: .25em .65em;
+  border-radius: 3px;
+}
+
+.badge-pending { background: #fff3cd; color: #856404; }
+.badge-processing { background: #d1ecf1; color: #0c5460; }
+.badge-shipped { background: #dbeafe; color: #1d4ed8; }
+.badge-delivered { background: #d1fae5; color: #065f46; }
+.badge-cancelled { background: #f8d7da; color: #721c24; }
+.badge-default { background: #ececec; color: #3f3f3f; }
+
+.filter-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.detail-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.mono-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  letter-spacing: .02em;
+}
+
+.note-text {
+  color: var(--muted);
+  font-size: .8rem;
+}

@@ -346,10 +346,7 @@
     <a href="{{ route('customer.shop.index') }}" class="nav-pill outline">Shop</a>
     <a href="{{ route('customer.cart.index') }}" class="nav-pill solid">Cart</a>
     <a href="{{ route('customer.orders.index') }}" class="nav-pill outline">Orders</a>
-    <form action="{{ route('logout') }}" method="post" class="m-0">
-      @csrf
-      <button type="submit" class="nav-pill solid" style="border:none;cursor:pointer">Sign Out</button>
-    </form>
+    @include('customer.partials.account-dropdown')
   </div>
 </nav>
 
@@ -395,9 +392,9 @@
                     <form action="{{ route('customer.cart.update-qty') }}" method="post" style="display: flex; align-items: center; gap: .25rem">
                       @csrf
                       <input type="hidden" name="cart_item_id" value="{{ $item->cart_item_id }}">
-                      <button type="submit" name="action" value="increase" class="qty-btn">+</button>
+                      <button type="submit" name="action" value="increase" class="qty-btn" title="Increase quantity">+</button>
                       <span class="qty-display">{{ $item->quantity }}</span>
-                      <button type="submit" name="action" value="decrease" class="qty-btn">−</button>
+                      <button type="submit" name="action" value="decrease" class="qty-btn" title="Decrease quantity">−</button>
                     </form>
                   </div>
                   <div class="cart-item-price">₱{{ number_format($item->product->price * $item->quantity, 2) }}</div>
@@ -424,10 +421,6 @@
             <div class="summary-row">
               <span>Shipping</span>
               <span id="summary-shipping">₱{{ number_format($shipping, 2) }}</span>
-            </div>
-            <div class="summary-row">
-              <span>Tax (12%)</span>
-              <span id="summary-tax">₱{{ number_format($tax, 2) }}</span>
             </div>
             <div class="summary-row total">
               <span>Total</span>
@@ -459,11 +452,10 @@
   const proceedCheckoutBtn = document.getElementById('proceed-checkout-btn');
   const summarySubtotal = document.getElementById('summary-subtotal');
   const summaryShipping = document.getElementById('summary-shipping');
-  const summaryTax = document.getElementById('summary-tax');
   const summaryTotal = document.getElementById('summary-total');
   const shippingAmount = @json($shipping);
 
-  if (selectedInputsContainer && proceedCheckoutBtn && summarySubtotal && summaryShipping && summaryTax && summaryTotal && itemCheckboxes.length) {
+  if (selectedInputsContainer && proceedCheckoutBtn && summarySubtotal && summaryShipping && summaryTotal && itemCheckboxes.length) {
     function formatPeso(value) {
       return '₱' + Number(value).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
@@ -484,12 +476,10 @@
         return sum + Number(checkbox.dataset.lineTotal || 0);
       }, 0);
       const shipping = subtotal > 0 ? shippingAmount : 0;
-      const tax = subtotal * 0.12;
-      const total = subtotal + shipping + tax;
+      const total = subtotal + shipping;
 
       summarySubtotal.textContent = formatPeso(subtotal);
       summaryShipping.textContent = formatPeso(shipping);
-      summaryTax.textContent = formatPeso(tax);
       summaryTotal.textContent = formatPeso(total);
       proceedCheckoutBtn.disabled = selectedItems.length === 0;
     }

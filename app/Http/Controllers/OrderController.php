@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\OrderStatus;
+use App\Models\OrderStatusLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -46,15 +49,58 @@ class OrderController extends Controller
 
         $order->load(['items.product', 'status', 'paymentMethod']);
 
-        $subtotal = $order->items->sum(function ($item) {
-            return $item->unit_price * $item->quantity;
-        });
+        $subtotal = (float) $order->items()
+            ->selectRaw('COALESCE(SUM(unit_price * quantity), 0) as subtotal')
+            ->value('subtotal');
 
         $shipping = 200;
-        $tax = $subtotal * 0.12;
-        $total = $subtotal + $shipping + $tax;
+        $total = $subtotal + $shipping;
 
-        return view('customer.orders.show', compact('order', 'subtotal', 'shipping', 'tax', 'total'));
+        return view('customer.orders.show', compact('order', 'subtotal', 'shipping', 'total'));
+    }
+
+    public function cancel(Order $order)
+    {
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+
+        if ($order->user_id !== $user->user_id) {
+            abort(403, 'Unauthorized');
+        }
+
+        $order->loadMissing('status');
+
+        $currentStatus = strtolower((string) ($order->status->status_name ?? ''));
+        if (!in_array($currentStatus, ['pending', 'processing'], true)) {
+            return redirect()
+                ->route('customer.orders.show', $order->order_id)
+                ->with('error', 'This order can no longer be cancelled.');
+        }
+
+        $cancelledStatus = OrderStatus::whereRaw('LOWER(status_name) = ?', ['cancelled'])->first();
+        if (!$cancelledStatus) {
+            return redirect()
+                ->route('customer.orders.show', $order->order_id)
+                ->with('error', 'Cancel status is not configured. Please contact support.');
+        }
+
+        DB::transaction(function () use ($order, $cancelledStatus, $user) {
+            $order->status_id = $cancelledStatus->status_id;
+            $order->updated_at = now();
+            $order->save();
+
+            OrderStatusLog::create([
+                'order_id' => $order->order_id,
+                'status_id' => $cancelledStatus->status_id,
+                'changed_by' => $user->user_id,
+                'changed_at' => now(),
+                'note' => 'Cancelled by customer',
+            ]);
+        });
+
+        return redirect()
+            ->route('customer.orders.show', $order->order_id)
+            ->with('success', 'Order cancelled successfully.');
     }
 
     /**

@@ -67,4 +67,14 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Role::class, 'role_id', 'role_id');
     }
+
+    public function addresses()
+    {
+        return $this->hasMany(UserAddress::class, 'user_id', 'user_id');
+    }
+
+    public function defaultAddress()
+    {
+        return $this->hasOne(UserAddress::class, 'user_id', 'user_id')->where('is_default', true);
+    }
 }

@@ -80,13 +80,6 @@
                     <i class="bi bi-arrow-counterclockwise me-1"></i> Recover
                 </button>
             </form>
-            <form method="POST" action="{{ route('admin.product.force-destroy', $product->product_id) }}" onsubmit="return confirm('Delete this product permanently? This cannot be undone.')">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-outline-danger">
-                    <i class="bi bi-trash3 me-1"></i> Delete
-                </button>
-            </form>
         @else
             <a href="{{ route('admin.product.edit', $product->product_id) }}" class="btn btn-outline-primary">
                 <i class="bi bi-pencil-square me-1"></i> Edit
@@ -96,13 +89,6 @@
                 @method('DELETE')
                 <button type="submit" class="btn btn-outline-warning">
                     <i class="bi bi-archive me-1"></i> Soft Delete
-                </button>
-            </form>
-            <form method="POST" action="{{ route('admin.product.force-destroy', $product->product_id) }}" onsubmit="return confirm('Delete this product permanently? This cannot be undone.')">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-outline-danger">
-                    <i class="bi bi-trash3 me-1"></i> Delete
                 </button>
             </form>
         @endif

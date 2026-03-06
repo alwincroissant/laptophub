@@ -23,7 +23,6 @@ class CartController extends Controller
                 'cartItems' => collect(),
                 'subtotal' => 0,
                 'shipping' => 0,
-                'tax' => 0,
                 'total' => 0
             ]);
         }
@@ -37,10 +36,9 @@ class CartController extends Controller
         });
 
         $shipping = $subtotal > 0 ? 200 : 0;
-        $tax = $subtotal * 0.12;
-        $total = $subtotal + $shipping + $tax;
+        $total = $subtotal + $shipping;
 
-        return view('customer.cart.index', compact('cartItems', 'subtotal', 'shipping', 'tax', 'total'));
+        return view('customer.cart.index', compact('cartItems', 'subtotal', 'shipping', 'total'));
     }
 
     /**
@@ -61,10 +59,6 @@ class CartController extends Controller
             return redirect()->back()->with('error', 'Product not found');
         }
 
-        if ($product->stock_qty < $request->quantity) {
-            return redirect()->back()->with('error', 'Insufficient stock');
-        }
-
         // Get or create cart for user
         $cart = Cart::firstOrCreate(
             ['user_id' => $user->user_id],
@@ -76,20 +70,35 @@ class CartController extends Controller
             ->where('product_id', $request->product_id)
             ->first();
 
+        $existingQty = $cartItem ? (int) $cartItem->quantity : 0;
+        $requestedQty = (int) $request->quantity;
+        $newQty = $existingQty + $requestedQty;
+
+        if ($newQty > (int) $product->stock_qty) {
+            return redirect()->back()->with(
+                'error',
+                "Only {$product->stock_qty} unit(s) of {$product->name} available. You already have {$existingQty} in cart."
+            );
+        }
+
         if ($cartItem) {
             // Update quantity
-            $cartItem->quantity += $request->quantity;
+            $cartItem->quantity = $newQty;
             $cartItem->save();
         } else {
             // Create new cart item
             CartItem::create([
                 'cart_id' => $cart->cart_id,
                 'product_id' => $request->product_id,
-                'quantity' => $request->quantity
+                'quantity' => $requestedQty
             ]);
         }
 
-        return redirect()->route('customer.cart.index')->with('success', 'Product added to cart');
+        $quantityAdded = $requestedQty;
+        $itemWord = $quantityAdded === 1 ? 'unit' : 'units';
+        $message = "Added {$quantityAdded} {$itemWord} of {$product->name} to cart.";
+
+        return redirect()->back()->with('success', $message);
     }
 
     /**
@@ -102,14 +111,27 @@ class CartController extends Controller
             'action' => 'required|in:increase,decrease'
         ]);
 
-        $cartItem = CartItem::find($request->cart_item_id);
+        $cartItem = CartItem::with('product')->find($request->cart_item_id);
 
         if (!$cartItem) {
             return redirect()->back()->with('error', 'Item not found');
         }
 
+        if (!$cartItem->product) {
+            return redirect()->back()->with('error', 'Product not found');
+        }
+
         if ($request->action === 'increase') {
-            $cartItem->quantity++;
+            $newQuantity = (int) $cartItem->quantity + 1;
+
+            if ($newQuantity > (int) $cartItem->product->stock_qty) {
+                return redirect()->back()->with(
+                    'error',
+                    "Cannot set quantity. Only {$cartItem->product->stock_qty} unit(s) of {$cartItem->product->name} available."
+                );
+            }
+
+            $cartItem->quantity = $newQuantity;
         } elseif ($request->action === 'decrease' && $cartItem->quantity > 1) {
             $cartItem->quantity--;
         }

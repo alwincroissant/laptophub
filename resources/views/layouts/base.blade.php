@@ -46,6 +46,53 @@
 		.site-footer a:hover { color: #fff; }
 		.site-footer .divider { border-color: rgba(255,255,255,.1); margin: 2rem 0 1.5rem; }
 		.site-footer .bottom { font-size: .75rem; }
+
+		.account-menu {
+			position: relative;
+			display: inline-block;
+		}
+
+		.account-dropdown {
+			position: absolute;
+			top: calc(100% + .35rem);
+			right: 0;
+			min-width: 220px;
+			background: #fff;
+			border: 1px solid #d8d2c8;
+			border-radius: 6px;
+			box-shadow: 0 10px 24px rgba(0, 0, 0, .12);
+			padding: .45rem;
+			display: none;
+			z-index: 400;
+		}
+
+		.account-menu:hover .account-dropdown,
+		.account-menu:focus-within .account-dropdown {
+			display: block;
+		}
+
+		.account-link,
+		.account-signout {
+			display: block;
+			width: 100%;
+			text-align: left;
+			background: transparent;
+			border: none;
+			color: #0c0c0c;
+			text-decoration: none;
+			font-size: .83rem;
+			padding: .5rem .6rem;
+			border-radius: 4px;
+		}
+
+		.account-link:hover,
+		.account-signout:hover {
+			background: #ede8df;
+		}
+
+		.account-signout-form {
+			margin: 0;
+		}
 	</style>
 
 	@stack('styles')
@@ -98,7 +145,7 @@
 					<a href="#">Shipping Policy</a>
 					<a href="#">Returns</a>
 					<a href="#">Contact Us</a>
-					<a href="#">Privacy Policy</a>
+					<a href="{{ route('legal.privacy') }}">Privacy Policy</a>
 				</div>
 			</div>
 			<hr class="divider"/>

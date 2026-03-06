@@ -149,13 +149,6 @@
                                             <i class="bi bi-arrow-counterclockwise"></i>
                                         </button>
                                     </form>
-                                    <form method="POST" action="{{ route('admin.product.force-destroy', $product->product_id) }}" onsubmit="return confirm('Delete this product permanently? This cannot be undone.')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete" aria-label="Delete">
-                                            <i class="bi bi-trash3"></i>
-                                        </button>
-                                    </form>
                                 @else
                                     <a href="{{ route('admin.product.edit', $product) }}" class="btn btn-sm btn-outline-primary" title="Edit" aria-label="Edit">
                                         <i class="bi bi-pencil-square"></i>
@@ -165,13 +158,6 @@
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-warning" title="Soft Delete" aria-label="Soft Delete">
                                             <i class="bi bi-archive"></i>
-                                        </button>
-                                    </form>
-                                    <form method="POST" action="{{ route('admin.product.force-destroy', $product->product_id) }}" onsubmit="return confirm('Delete this product permanently? This cannot be undone.')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete" aria-label="Delete">
-                                            <i class="bi bi-trash3"></i>
                                         </button>
                                     </form>
                                 @endif

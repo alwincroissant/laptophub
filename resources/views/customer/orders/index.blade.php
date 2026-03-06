@@ -170,6 +170,11 @@
       color: #084298;
     }
 
+    .status-processing {
+      background: #cfe2ff;
+      color: #084298;
+    }
+
     .status-shipped {
       background: #e2e3e5;
       color: #41464b;
@@ -295,6 +300,17 @@
       border-color: var(--red-dk);
     }
 
+    .btn-action.danger {
+      background: #fff;
+      color: #842029;
+      border-color: #f1aeb5;
+    }
+
+    .btn-action.danger:hover {
+      background: #f8d7da;
+      border-color: #ea868f;
+    }
+
     /* ── EMPTY STATE ── */
     .empty-state {
       text-align: center;
@@ -329,10 +345,7 @@
     <a href="{{ route('customer.shop.index') }}" class="nav-pill outline">Shop</a>
     <a href="{{ route('customer.cart.index') }}" class="nav-pill outline">Cart</a>
     <a href="{{ route('customer.orders.index') }}" class="nav-pill solid">Orders</a>
-    <form action="{{ route('logout') }}" method="post" class="m-0">
-      @csrf
-      <button type="submit" class="nav-pill solid" style="border:none;cursor:pointer">Sign Out</button>
-    </form>
+    @include('customer.partials.account-dropdown')
   </div>
 </nav>
 
@@ -344,13 +357,21 @@
 
 <section class="py-5">
   <div class="container">
+    @if(session('success'))
+      <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+      <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+
     <!-- Filter Buttons -->
     <div class="filters-bar">
       <a href="{{ route('customer.orders.index') }}" class="filter-btn {{ !request('status') ? 'active' : '' }}">All Orders</a>
       <a href="{{ route('customer.orders.index', ['status' => 'pending']) }}" class="filter-btn {{ request('status') === 'pending' ? 'active' : '' }}">Pending</a>
-      <a href="{{ route('customer.orders.index', ['status' => 'confirmed']) }}" class="filter-btn {{ request('status') === 'confirmed' ? 'active' : '' }}">Confirmed</a>
+      <a href="{{ route('customer.orders.index', ['status' => 'processing']) }}" class="filter-btn {{ request('status') === 'processing' ? 'active' : '' }}">Processing</a>
       <a href="{{ route('customer.orders.index', ['status' => 'shipped']) }}" class="filter-btn {{ request('status') === 'shipped' ? 'active' : '' }}">Shipped</a>
       <a href="{{ route('customer.orders.index', ['status' => 'delivered']) }}" class="filter-btn {{ request('status') === 'delivered' ? 'active' : '' }}">Delivered</a>
+      <a href="{{ route('customer.orders.index', ['status' => 'cancelled']) }}" class="filter-btn {{ request('status') === 'cancelled' ? 'active' : '' }}">Cancelled</a>
     </div>
 
     @if($orders && $orders->count() > 0)
@@ -395,7 +416,18 @@
               Shipping to: <strong>{{ $order->shipping_address }}</strong>
             </div>
             <div class="order-actions">
+              @php
+                $statusName = strtolower((string) ($order->status->status_name ?? ''));
+                $canCancel = in_array($statusName, ['pending', 'processing'], true);
+              @endphp
               <a href="{{ route('customer.orders.show', $order->order_id) }}" class="btn-action">View Details</a>
+              @if($canCancel)
+                <form action="{{ route('customer.orders.cancel', $order->order_id) }}" method="post" style="margin:0" onsubmit="return confirm('Cancel this order? This cannot be undone.')">
+                  @csrf
+                  @method('PATCH')
+                  <button type="submit" class="btn-action danger">Cancel Order</button>
+                </form>
+              @endif
               <a href="{{ route('customer.shop.index') }}" class="btn-action primary">Buy Again</a>
             </div>
           </div>
