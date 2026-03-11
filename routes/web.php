@@ -7,6 +7,7 @@ use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AdminOrderController;
+use App\Http\Controllers\AdminReviewController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AdminAccountController;
+use App\Http\Controllers\ReviewController;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
@@ -131,6 +133,9 @@ Route::middleware(['auth', 'active'])->prefix('customer')->name('customer.')->gr
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 
+    // Reviews routes
+    Route::post('/shop/{productId}/reviews', [ReviewController::class, 'store'])->name('shop.reviews.store');
+
     // Account routes
     Route::get('/account/profile', [AccountController::class, 'profile'])->name('account.profile');
     Route::post('/account/profile', [AccountController::class, 'updateProfile'])->name('account.profile.update');
@@ -180,6 +185,10 @@ Route::middleware(['auth.admin', 'active', 'admin'])->prefix('admin')->name('adm
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('order.index');
     Route::get('/orders/{orderId}', [AdminOrderController::class, 'show'])->name('order.show');
     Route::patch('/orders/{orderId}/status', [AdminOrderController::class, 'updateStatus'])->name('order.update-status');
+
+    Route::get('/reviews', [AdminReviewController::class, 'index'])->name('review.index');
+    Route::patch('/reviews/{review}/visibility', [AdminReviewController::class, 'toggleVisibility'])->name('review.toggle-visibility');
+    Route::delete('/reviews/{review}', [AdminReviewController::class, 'destroy'])->name('review.destroy');
 
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
     Route::get('/inventory/create', [InventoryController::class, 'create'])->name('inventory.create');

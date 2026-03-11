@@ -531,7 +531,18 @@
                   <div class="card-body">
                     <div class="brand-tag">{{ $product->brand->name ?? 'Unbranded' }}</div>
                     <h5>{{ $product->name }}</h5>
-                    <div class="stars mb-1">★★★★★</div>
+                    @php
+                      $avgRating = (float) ($product->visible_reviews_avg ?? 0);
+                      $reviewCount = (int) ($product->visible_reviews_count ?? 0);
+                      $filledStars = (int) round(max(0, min(5, $avgRating)));
+                      $stars = str_repeat('★', $filledStars) . str_repeat('☆', 5 - $filledStars);
+                    @endphp
+                    <div class="stars mb-1">
+                      {{ $stars }}
+                      <span style="font-size:.73rem;color:var(--muted);margin-left:.35rem">
+                        {{ $reviewCount > 0 ? number_format($avgRating, 1) . ' (' . $reviewCount . ')' : 'No reviews yet' }}
+                      </span>
+                    </div>
                     <div class="price">₱{{ number_format($product->price, 2) }}</div>
                     <a href="{{ route('customer.shop.show', $product->product_id) }}" class="btn-view mb-2">
                       <i class="bi bi-eye me-1"></i> View

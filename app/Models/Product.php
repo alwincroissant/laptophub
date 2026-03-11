@@ -50,4 +50,9 @@ class Product extends Model
     {
         return $this->belongsToMany(Supplier::class, 'supplier_products', 'product_id', 'supplier_id');
     }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class, 'product_id', 'product_id');
+    }
 }

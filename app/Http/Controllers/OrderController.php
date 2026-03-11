@@ -19,7 +19,7 @@ class OrderController extends Controller
         /** @var \App\Models\User $user */
         $user = auth()->user();
         $query = Order::where('user_id', $user->user_id)
-            ->with(['items', 'status', 'paymentMethod'])
+            ->with(['items.product', 'items.review', 'status', 'paymentMethod'])
             ->orderBy('placed_at', 'desc');
 
         // Filter by status

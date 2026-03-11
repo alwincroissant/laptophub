@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\OrderItem;
+use App\Models\Review;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ShopController extends Controller
 {
@@ -14,7 +17,18 @@ class ShopController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Product::query()->with(['brand', 'category']);
+        $query = Product::query()
+            ->with(['brand', 'category'])
+            ->withCount([
+                'reviews as visible_reviews_count' => function ($reviewQuery) {
+                    $reviewQuery->where('is_visible', true);
+                },
+            ])
+            ->withAvg([
+                'reviews as visible_reviews_avg' => function ($reviewQuery) {
+                    $reviewQuery->where('is_visible', true);
+                },
+            ], 'rating');
 
         $search = trim((string) $request->input('search', ''));
         $selectedBrands = array_map('intval', (array) $request->input('brand', []));
@@ -108,7 +122,18 @@ class ShopController extends Controller
      */
     public function search(Request $request)
     {
-        $query = Product::query();
+        $query = Product::query()
+            ->with(['brand', 'category'])
+            ->withCount([
+                'reviews as visible_reviews_count' => function ($reviewQuery) {
+                    $reviewQuery->where('is_visible', true);
+                },
+            ])
+            ->withAvg([
+                'reviews as visible_reviews_avg' => function ($reviewQuery) {
+                    $reviewQuery->where('is_visible', true);
+                },
+            ], 'rating');
 
         if ($request->filled('q')) {
             $searchTerm = $request->get('q');
@@ -138,16 +163,61 @@ class ShopController extends Controller
     /**
      * Display detailed product information.
      */
-    public function show(int $productId)
+    public function show(Request $request, int $productId)
     {
         $product = Product::query()
             ->with(['brand', 'category'])
+            ->withCount([
+                'reviews as visible_reviews_count' => function ($reviewQuery) {
+                    $reviewQuery->where('is_visible', true);
+                },
+            ])
+            ->withAvg([
+                'reviews as visible_reviews_avg' => function ($reviewQuery) {
+                    $reviewQuery->where('is_visible', true);
+                },
+            ], 'rating')
             ->where('product_id', $productId)
             ->where('is_archived', false)
             ->firstOrFail();
 
+        $reviews = Review::query()
+            ->where('product_id', $product->product_id)
+            ->where('is_visible', true)
+            ->with('user:user_id,full_name')
+            ->orderByDesc('created_at')
+            ->limit(12)
+            ->get();
+
+        $eligibleReviewItems = collect();
+        if (Auth::check()) {
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
+
+            $eligibleReviewItems = OrderItem::query()
+                ->where('product_id', $product->product_id)
+                ->whereHas('order', function ($orderQuery) use ($user) {
+                    $orderQuery->where('user_id', $user->user_id)
+                        ->whereHas('status', function ($statusQuery) {
+                            $statusQuery->whereRaw('LOWER(status_name) = ?', ['delivered']);
+                        });
+                })
+                ->whereDoesntHave('review')
+                ->with('order:order_id,placed_at')
+                ->orderByDesc('order_id')
+                ->get(['order_item_id', 'order_id']);
+        }
+
+        $selectedOrderItemId = (int) $request->query('order_item_id', 0);
+        if ($selectedOrderItemId > 0 && $eligibleReviewItems->where('order_item_id', $selectedOrderItemId)->isEmpty()) {
+            $selectedOrderItemId = 0;
+        }
+
         return view('customer.shop.show', [
             'product' => $product,
+            'reviews' => $reviews,
+            'eligibleReviewItems' => $eligibleReviewItems,
+            'selectedOrderItemId' => $selectedOrderItemId,
         ]);
     }
 }

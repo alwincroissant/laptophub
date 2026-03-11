@@ -2,64 +2,63 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\OrderItem;
+use App\Models\Product;
 use App\Models\Review;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ReviewController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function store(Request $request, int $productId): RedirectResponse
     {
-        //
-    }
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+        $product = Product::query()
+            ->where('product_id', $productId)
+            ->where('is_archived', false)
+            ->firstOrFail();
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        $data = $request->validate([
+            'order_item_id' => ['required', 'integer'],
+            'rating' => ['required', 'integer', 'between:1,5'],
+            'title' => ['nullable', 'string', 'max:150'],
+            'body' => ['nullable', 'string', 'max:1500'],
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Review $review)
-    {
-        //
-    }
+        $eligibleOrderItem = OrderItem::query()
+            ->where('order_item_id', (int) $data['order_item_id'])
+            ->where('product_id', $product->product_id)
+            ->whereHas('order', function ($query) use ($user) {
+                $query->where('user_id', $user->user_id)
+                    ->whereHas('status', function ($statusQuery) {
+                        $statusQuery->whereRaw('LOWER(status_name) = ?', ['delivered']);
+                    });
+            })
+            ->whereDoesntHave('review')
+            ->first();
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Review $review)
-    {
-        //
-    }
+        if (! $eligibleOrderItem) {
+            return redirect()
+                ->route('customer.shop.show', $product->product_id)
+                ->with('error', 'You can only review products from delivered orders that are not yet reviewed.');
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Review $review)
-    {
-        //
-    }
+        Review::create([
+            'product_id' => $product->product_id,
+            'user_id' => $user->user_id,
+            'order_item_id' => $eligibleOrderItem->order_item_id,
+            'rating' => (int) $data['rating'],
+            'title' => trim((string) ($data['title'] ?? '')) ?: null,
+            'body' => trim((string) ($data['body'] ?? '')) ?: null,
+            'is_visible' => true,
+            'created_at' => now(),
+        ]);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Review $review)
-    {
-        //
+        return redirect()
+            ->to(route('customer.shop.show', $product->product_id) . '#reviews')
+            ->with('success', 'Thanks for your review.');
     }
 }

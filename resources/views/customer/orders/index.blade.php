@@ -258,6 +258,43 @@
       text-align: right;
     }
 
+    .order-item-review {
+      margin-left: .75rem;
+      min-width: 110px;
+      text-align: right;
+    }
+
+    .btn-review-item {
+      display: inline-block;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      padding: .38rem .58rem;
+      border-radius: 4px;
+      border: 1px solid var(--blue);
+      color: var(--blue);
+      text-decoration: none;
+      background: #fff;
+      transition: background .15s;
+    }
+
+    .btn-review-item:hover {
+      background: rgba(26, 58, 92, .08);
+    }
+
+    .reviewed-pill {
+      display: inline-block;
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      padding: .35rem .5rem;
+      border-radius: 999px;
+      background: #d1e7dd;
+      color: #0a3622;
+    }
+
     .order-footer {
       display: flex;
       justify-content: space-between;
@@ -407,6 +444,23 @@
                 </div>
                 <div class="order-item-qty">× {{ $item->quantity }}</div>
                 <div class="order-item-price">₱{{ number_format($item->unit_price * $item->quantity, 2) }}</div>
+                <div class="order-item-review">
+                  @php
+                    $isDelivered = strtolower((string) ($order->status->status_name ?? '')) === 'delivered';
+                    $hasReview = (bool) $item->review;
+                  @endphp
+
+                  @if($isDelivered && ! $hasReview)
+                    <a
+                      href="{{ route('customer.shop.show', $item->product_id) . '?order_item_id=' . $item->order_item_id . '#reviews' }}"
+                      class="btn-review-item"
+                    >
+                      Write Review
+                    </a>
+                  @elseif($hasReview)
+                    <span class="reviewed-pill">Reviewed</span>
+                  @endif
+                </div>
               </div>
             @endforeach
           </div>

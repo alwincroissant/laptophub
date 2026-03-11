@@ -244,6 +244,89 @@
       font-size: .85rem;
     }
 
+    .reviews-wrap {
+      margin-top: 1rem;
+    }
+
+    .review-summary {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .review-summary h3 {
+      font-size: 1.05rem;
+      margin-bottom: .2rem;
+    }
+
+    .review-stars {
+      color: #b8860b;
+      font-size: .95rem;
+      letter-spacing: .03em;
+    }
+
+    .review-count {
+      font-size: .82rem;
+      color: var(--muted);
+      margin-left: .45rem;
+    }
+
+    .review-form-card,
+    .review-list-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .review-list-item + .review-list-item {
+      border-top: 1px solid #ece7de;
+      margin-top: .9rem;
+      padding-top: .9rem;
+    }
+
+    .review-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: .6rem;
+      margin-bottom: .3rem;
+      flex-wrap: wrap;
+    }
+
+    .review-author {
+      font-size: .85rem;
+      font-weight: 600;
+    }
+
+    .review-date {
+      font-size: .75rem;
+      color: var(--muted);
+    }
+
+    .review-title {
+      font-size: .88rem;
+      font-weight: 700;
+      margin-bottom: .35rem;
+    }
+
+    .review-body {
+      font-size: .84rem;
+      color: #343a40;
+      line-height: 1.55;
+      margin: 0;
+      white-space: pre-line;
+    }
+
+    .review-note {
+      margin-top: .55rem;
+      font-size: .78rem;
+      color: var(--muted);
+    }
+
 </style>
 @endpush
 
@@ -331,6 +414,98 @@
             <span style="font-size:.85rem;color:var(--muted)">Out of stock</span>
           @endif
         </div>
+      </div>
+    </div>
+
+    <div class="reviews-wrap" id="reviews">
+      @php
+        $avgRating = (float) ($product->visible_reviews_avg ?? 0);
+        $reviewCount = (int) ($product->visible_reviews_count ?? 0);
+        $filledStars = (int) round(max(0, min(5, $avgRating)));
+        $stars = str_repeat('★', $filledStars) . str_repeat('☆', 5 - $filledStars);
+      @endphp
+
+      <div class="review-summary">
+        <h3>Customer Reviews</h3>
+        <div>
+          <span class="review-stars">{{ $stars }}</span>
+          <span class="review-count">
+            {{ $reviewCount > 0 ? number_format($avgRating, 1) . ' out of 5 from ' . $reviewCount . ' review(s)' : 'No reviews yet for this product.' }}
+          </span>
+        </div>
+      </div>
+
+      @auth
+        @if(($eligibleReviewItems ?? collect())->isNotEmpty())
+          <div class="review-form-card">
+            <h4 style="font-size:.95rem;margin-bottom:.75rem">Write a Review</h4>
+            <form action="{{ route('customer.shop.reviews.store', $product->product_id) }}" method="post">
+              @csrf
+              <div class="mb-2">
+                <label class="form-label" for="order-item-id" style="font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)">Delivered Order Item</label>
+                <select name="order_item_id" id="order-item-id" class="form-select form-select-sm" required>
+                  @foreach($eligibleReviewItems as $eligibleItem)
+                    <option value="{{ $eligibleItem->order_item_id }}" @selected((int) ($selectedOrderItemId ?? 0) === (int) $eligibleItem->order_item_id)>
+                      Order #{{ $eligibleItem->order_id }} - {{ optional($eligibleItem->order->placed_at)->format('M d, Y') ?? 'Delivered order' }}
+                    </option>
+                  @endforeach
+                </select>
+              </div>
+              <div class="mb-2">
+                <label class="form-label" for="review-rating" style="font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)">Rating</label>
+                <select name="rating" id="review-rating" class="form-select form-select-sm" required>
+                  <option value="5">5 - Excellent</option>
+                  <option value="4">4 - Very Good</option>
+                  <option value="3">3 - Good</option>
+                  <option value="2">2 - Fair</option>
+                  <option value="1">1 - Poor</option>
+                </select>
+              </div>
+              <div class="mb-2">
+                <label class="form-label" for="review-title" style="font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)">Title (optional)</label>
+                <input type="text" id="review-title" name="title" class="form-control form-control-sm" maxlength="150" placeholder="Short headline for your review">
+              </div>
+              <div class="mb-2">
+                <label class="form-label" for="review-body" style="font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)">Review (optional)</label>
+                <textarea id="review-body" name="body" class="form-control form-control-sm" rows="3" maxlength="1500" placeholder="Share your experience with this product."></textarea>
+              </div>
+              <button type="submit" class="btn-add-cart">Submit Review</button>
+            </form>
+            <p class="review-note">You can only review items from orders marked Delivered.</p>
+          </div>
+        @else
+          <div class="review-form-card">
+            <h4 style="font-size:.95rem;margin-bottom:.35rem">Write a Review</h4>
+            <p class="review-note mb-0">You can submit a review after this product is marked Delivered in your orders.</p>
+          </div>
+        @endif
+      @else
+        <div class="review-form-card">
+          <h4 style="font-size:.95rem;margin-bottom:.35rem">Write a Review</h4>
+          <p class="review-note mb-0">Please <a href="{{ route('index') }}#login">log in</a> and complete a purchase to leave a review.</p>
+        </div>
+      @endauth
+
+      <div class="review-list-card">
+        @forelse(($reviews ?? collect()) as $review)
+          <div class="review-list-item">
+            <div class="review-meta">
+              <div class="review-author">{{ $review->user->full_name ?? 'Customer' }}</div>
+              <div class="review-date">{{ optional($review->created_at)->format('M d, Y') }}</div>
+            </div>
+            <div class="review-stars" style="font-size:.82rem;margin-bottom:.3rem">
+              {{ str_repeat('★', (int) $review->rating) . str_repeat('☆', 5 - (int) $review->rating) }}
+            </div>
+            @if($review->title)
+              <div class="review-title">{{ $review->title }}</div>
+            @endif
+            @if($review->body)
+              <p class="review-body">{{ $review->body }}</p>
+            @endif
+          </div>
+        @empty
+          <p class="review-note mb-0">No reviews yet. Be the first to share feedback after completing a purchase.</p>
+        @endforelse
       </div>
     </div>
   </div>

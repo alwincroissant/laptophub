@@ -46,8 +46,7 @@
 
         <div class="nav-section-label">Commerce</div>
         <a href="{{ route('admin.order.index') }}" class="nav-link {{ (($activeNav ?? '') === 'order') ? 'active' : '' }}"><i class="bi bi-bag-check"></i> Orders</a>
-        <a href="#" class="nav-link"><i class="bi bi-cart3"></i> Carts</a>
-        <a href="#" class="nav-link"><i class="bi bi-star-half"></i> Reviews</a>
+        <a href="{{ route('admin.review.index') }}" class="nav-link {{ (($activeNav ?? '') === 'review') ? 'active' : '' }}"><i class="bi bi-star-half"></i> Reviews</a>
 
         <div class="nav-section-label">Operations</div>
         <a href="{{ route('admin.inventory.index') }}" class="nav-link {{ (($activeNav ?? '') === 'inventory') ? 'active' : '' }}"><i class="bi bi-box-seam"></i> Inventory</a>
