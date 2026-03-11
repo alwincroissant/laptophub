@@ -6,6 +6,8 @@ use App\Models\UserAddress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class AccountController extends Controller
@@ -20,16 +22,43 @@ class AccountController extends Controller
         /** @var \App\Models\User $user */
         $user = auth()->user();
 
-        $data = $request->validate([
-            'full_name' => ['required', 'string', 'max:100'],
-            'email' => [
+        $wantsDetailsUpdate = $request->hasAny(['full_name', 'email', 'contact_number']);
+
+        $rules = [
+            'profile_image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
+        ];
+
+        if ($wantsDetailsUpdate) {
+            $rules['full_name'] = ['required', 'string', 'max:100'];
+            $rules['email'] = [
                 'required',
                 'email',
                 'max:150',
                 Rule::unique('users', 'email')->ignore($user->user_id, 'user_id'),
-            ],
-            'contact_number' => ['nullable', 'string', 'max:20'],
-        ]);
+            ];
+            $rules['contact_number'] = ['nullable', 'string', 'max:20'];
+        }
+
+        $data = $request->validate($rules);
+
+        if (! $wantsDetailsUpdate && ! $request->hasFile('profile_image')) {
+            return redirect()->route('customer.account.profile')->with('error', 'Please choose an image to upload.');
+        }
+
+        if ($request->hasFile('profile_image')) {
+            if ($user->profile_image_url && Str::startsWith($user->profile_image_url, '/storage/')) {
+                $existingPath = Str::after($user->profile_image_url, '/storage/');
+
+                if ($existingPath !== '') {
+                    Storage::disk('public')->delete($existingPath);
+                }
+            }
+
+            $storedPath = $request->file('profile_image')->store('profile-images', 'public');
+            $data['profile_image_url'] = Storage::url($storedPath);
+        }
+
+        unset($data['profile_image']);
 
         $user->fill($data);
         $user->save();

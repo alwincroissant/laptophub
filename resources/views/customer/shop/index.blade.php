@@ -296,6 +296,39 @@
       background: var(--red-dk);
     }
 
+    .btn-auth-required {
+      width: 100%;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: .4rem;
+      background: linear-gradient(180deg, #d24536 0%, #bf3629 100%);
+      color: #fff;
+      border: 1px solid #b63226;
+      border-radius: 4px;
+      padding: .75rem;
+      font-size: .84rem;
+      font-weight: 700;
+      letter-spacing: .01em;
+      text-decoration: none;
+      margin-bottom: .45rem;
+      transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+    }
+
+    .btn-auth-required:hover {
+      color: #fff;
+      filter: brightness(.98);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(192, 57, 43, .22);
+    }
+
+    .auth-cart-note {
+      margin: 0;
+      font-size: .74rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
     .btn-view {
       display: inline-flex;
       align-items: center;
@@ -361,9 +394,14 @@
   <div class="d-flex gap-2 align-items-center">
     <a href="{{ route('index') }}" class="nav-pill outline">Home</a>
     <a href="{{ route('customer.shop.index') }}" class="nav-pill solid">Shop</a>
-    <a href="{{ route('customer.cart.index') }}" class="nav-pill outline">Cart</a>
-    <a href="{{ route('customer.orders.index') }}" class="nav-pill outline">Orders</a>
-    @include('customer.partials.account-dropdown')
+    @auth
+      <a href="{{ route('customer.cart.index') }}" class="nav-pill outline">Cart</a>
+      <a href="{{ route('customer.orders.index') }}" class="nav-pill outline">Orders</a>
+      @include('customer.partials.account-dropdown')
+    @else
+      <a href="{{ route('index') }}#login" class="nav-pill outline">Log In</a>
+      <a href="{{ route('index') }}#register" class="nav-pill solid">Register</a>
+    @endauth
   </div>
 </nav>
 
@@ -498,16 +536,23 @@
                     <a href="{{ route('customer.shop.show', $product->product_id) }}" class="btn-view mb-2">
                       <i class="bi bi-eye me-1"></i> View
                     </a>
-                    <form action="{{ route('customer.cart.add') }}" method="post">
-                      @csrf
-                      <input type="hidden" name="product_id" value="{{ $product->product_id }}">
-                      <div style="display: flex; gap: .5rem; margin-bottom: .75rem">
-                        <input type="number" name="quantity" value="1" min="1" max="{{ $product->stock_qty }}" style="width: 60px; padding: .5rem; border: 1px solid var(--border); border-radius: 4px; font-size: .85rem">
-                        <button type="submit" class="btn-add-cart" style="flex-grow: 1">
-                          <i class="bi bi-cart-plus"></i> Add to Cart
-                        </button>
-                      </div>
-                    </form>
+                    @auth
+                      <form action="{{ route('customer.cart.add') }}" method="post">
+                        @csrf
+                        <input type="hidden" name="product_id" value="{{ $product->product_id }}">
+                        <div style="display: flex; gap: .5rem; margin-bottom: .75rem">
+                          <input type="number" name="quantity" value="1" min="1" max="{{ $product->stock_qty }}" style="width: 60px; padding: .5rem; border: 1px solid var(--border); border-radius: 4px; font-size: .85rem">
+                          <button type="submit" class="btn-add-cart" style="flex-grow: 1">
+                            <i class="bi bi-cart-plus"></i> Add to Cart
+                          </button>
+                        </div>
+                      </form>
+                    @else
+                      <a href="{{ route('index') }}#login" class="btn-auth-required">
+                        Log In to Add to Cart
+                      </a>
+                      <p class="auth-cart-note">You can browse products as guest. Checkout needs login.</p>
+                    @endauth
                     @if($product->stock_qty < 10 && $product->stock_qty > 0)
                       <p style="font-size: .75rem; color: var(--red); margin: 0">Only {{ $product->stock_qty }} left</p>
                     @elseif($product->stock_qty <= 0)

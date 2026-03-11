@@ -207,6 +207,35 @@
       gap: .4rem;
     }
 
+    .btn-auth-required {
+      background: linear-gradient(180deg, #d24536 0%, #bf3629 100%);
+      color: #fff;
+      border: 1px solid #b63226;
+      border-radius: 4px;
+      padding: .75rem 1rem;
+      font-size: .84rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+    }
+
+    .btn-auth-required:hover {
+      color: #fff;
+      filter: brightness(.98);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(192, 57, 43, .22);
+    }
+
+    .auth-cart-note {
+      margin: 0;
+      font-size: .76rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
     .qty-input {
       width: 78px;
       border: 1px solid var(--border);
@@ -224,9 +253,14 @@
   <div class="d-flex gap-2 align-items-center">
     <a href="{{ route('index') }}" class="nav-pill outline">Home</a>
     <a href="{{ route('customer.shop.index') }}" class="nav-pill solid">Shop</a>
-    <a href="{{ route('customer.cart.index') }}" class="nav-pill outline">Cart</a>
-    <a href="{{ route('customer.orders.index') }}" class="nav-pill outline">Orders</a>
-    @include('customer.partials.account-dropdown')
+    @auth
+      <a href="{{ route('customer.cart.index') }}" class="nav-pill outline">Cart</a>
+      <a href="{{ route('customer.orders.index') }}" class="nav-pill outline">Orders</a>
+      @include('customer.partials.account-dropdown')
+    @else
+      <a href="{{ route('index') }}#login" class="nav-pill outline">Log In</a>
+      <a href="{{ route('index') }}#register" class="nav-pill solid">Register</a>
+    @endauth
   </div>
 </nav>
 
@@ -282,12 +316,17 @@
           <a href="{{ route('customer.shop.index') }}" class="btn-back"><i class="bi bi-arrow-left"></i> Back to Shop</a>
 
           @if($product->stock_qty > 0)
-            <form action="{{ route('customer.cart.add') }}" method="post" class="d-flex gap-2 align-items-center">
-              @csrf
-              <input type="hidden" name="product_id" value="{{ $product->product_id }}">
-              <input type="number" name="quantity" value="1" min="1" max="{{ $product->stock_qty }}" class="qty-input">
-              <button type="submit" class="btn-add-cart"><i class="bi bi-cart-plus"></i> Add to Cart</button>
-            </form>
+            @auth
+              <form action="{{ route('customer.cart.add') }}" method="post" class="d-flex gap-2 align-items-center">
+                @csrf
+                <input type="hidden" name="product_id" value="{{ $product->product_id }}">
+                <input type="number" name="quantity" value="1" min="1" max="{{ $product->stock_qty }}" class="qty-input">
+                <button type="submit" class="btn-add-cart"><i class="bi bi-cart-plus"></i> Add to Cart</button>
+              </form>
+            @else
+              <a href="{{ route('index') }}#login" class="btn-auth-required">Log In to Add to Cart</a>
+              <p class="auth-cart-note">Guest browsing is enabled. Sign in to continue to cart and checkout.</p>
+            @endauth
           @else
             <span style="font-size:.85rem;color:var(--muted)">Out of stock</span>
           @endif

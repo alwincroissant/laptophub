@@ -18,10 +18,27 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AdminAccountController;
 use App\Models\Brand;
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Support\Facades\DB;
 
 $landingPage = function () {
+    $featuredCategories = Category::query()
+        ->where('is_active', true)
+        ->whereNull('deleted_at')
+        ->withCount([
+            'products as active_products_count' => function ($query) {
+                $query->where('is_archived', false)
+                    ->whereNull('deleted_at')
+                    ->where('stock_qty', '>', 0);
+            },
+        ])
+        ->having('active_products_count', '>', 0)
+        ->orderByDesc('active_products_count')
+        ->orderBy('name')
+        ->limit(6)
+        ->get(['category_id', 'name']);
+
     $featuredBrands = Brand::query()
         ->where('is_active', true)
         ->whereHas('products', function ($query) {
@@ -69,6 +86,7 @@ $landingPage = function () {
         ]);
 
     return view('index', [
+        'featuredCategories' => $featuredCategories,
         'featuredBrands' => $featuredBrands,
         'featuredProducts' => $featuredProducts,
     ]);
@@ -85,13 +103,16 @@ Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/register', [AuthController::class, 'register'])->name('register');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Customer Routes (Authenticated Users)
-Route::middleware(['auth', 'active'])->prefix('customer')->name('customer.')->group(function () {
-    // Shop routes
+// Customer Routes (Public Browsing)
+Route::prefix('customer')->name('customer.')->group(function () {
+    // Shop routes (public)
     Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
     Route::get('/shop/{productId}', [ShopController::class, 'show'])->name('shop.show');
     Route::get('/search', [ShopController::class, 'search'])->name('shop.search');
+});
 
+// Customer Routes (Authenticated Users)
+Route::middleware(['auth', 'active'])->prefix('customer')->name('customer.')->group(function () {
     // Cart routes
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');

@@ -643,18 +643,15 @@
       <a href="{{ route('customer.cart.index') }}" class="nav-pill outline d-none d-md-inline">Cart</a>
       <a href="{{ route('customer.orders.index') }}" class="nav-pill outline d-none d-md-inline">Orders</a>
     @else
-      <a href="#features" class="nav-pill outline d-none d-md-inline">Features</a>
-      <a href="#catalog"  class="nav-pill outline d-none d-md-inline">Catalog</a>
+      <a href="{{ route('index') }}" class="nav-pill outline d-none d-md-inline">Home</a>
+      <a href="{{ route('customer.shop.index') }}" class="nav-pill outline d-none d-md-inline">Shop</a>
     @endauth
     @guest
       <a href="#login"    class="nav-pill outline">Log In</a>
       <a href="#register" class="nav-pill solid">Register</a>
     @endguest
     @auth
-      <form action="{{ route('logout') }}" method="post" class="m-0">
-        @csrf
-        <button type="submit" class="nav-pill solid" style="border:none;cursor:pointer">Sign Out</button>
-      </form>
+      @include('customer.partials.account-dropdown')
     @endauth
   </div>
 </nav>
@@ -690,8 +687,8 @@
           <i class="bi bi-bag-check me-2"></i>Continue Shopping
         </a>
       @endauth
-      <a href="#catalog" class="btn-hero-secondary">
-        Browse Catalog <i class="bi bi-arrow-right ms-1"></i>
+      <a href="{{ route('customer.shop.index') }}" class="btn-hero-secondary">
+        Browse Shop <i class="bi bi-arrow-right ms-1"></i>
       </a>
     </div>
     <div class="hero-stats">
@@ -874,7 +871,7 @@
       </div>
 
       <a href="{{ route('customer.shop.index') }}" class="btn-submit" style="display:block;text-align:center;text-decoration:none;margin-bottom:.75rem">
-        <i class="bi bi-grid me-2"></i>Browse Catalog
+        <i class="bi bi-grid me-2"></i>Browse Shop
       </a>
       <a href="{{ route('customer.orders.index') }}" class="btn-submit" style="display:block;text-align:center;text-decoration:none;margin-bottom:1rem;background:var(--blue)">
         <i class="bi bi-receipt me-2"></i>My Orders
@@ -894,7 +891,7 @@
 <!-- ════════════════════════════════════
      TRUST BAND
 ════════════════════════════════════ -->
-<section class="trust-band" id="features">
+<section class="trust-band">
   <div class="container">
     <div class="row g-4 justify-content-center">
       <div class="col-12 col-sm-6 col-lg-3">
@@ -940,7 +937,7 @@
 <!-- ════════════════════════════════════
      CATEGORIES
 ════════════════════════════════════ -->
-<section class="py-5" id="catalog">
+<section class="py-5">
   <div class="container py-4">
     <div class="row mb-4">
       <div class="col-lg-6">
@@ -952,48 +949,46 @@
       </div>
     </div>
     <div class="row g-3">
-      <div class="col-6 col-md-4 col-lg-2">
-        <a href="#" class="category-card">
-          <span class="cat-icon">💻</span>
-          <h5>Laptops</h5>
-          <p>120+ models</p>
-        </a>
-      </div>
-      <div class="col-6 col-md-4 col-lg-2">
-        <a href="#" class="category-card">
-          <span class="cat-icon">🎮</span>
-          <h5>Gaming</h5>
-          <p>48 products</p>
-        </a>
-      </div>
-      <div class="col-6 col-md-4 col-lg-2">
-        <a href="#" class="category-card">
-          <span class="cat-icon">🔋</span>
-          <h5>Batteries</h5>
-          <p>34 products</p>
-        </a>
-      </div>
-      <div class="col-6 col-md-4 col-lg-2">
-        <a href="#" class="category-card">
-          <span class="cat-icon">💾</span>
-          <h5>Storage</h5>
-          <p>55 products</p>
-        </a>
-      </div>
-      <div class="col-6 col-md-4 col-lg-2">
-        <a href="#" class="category-card">
-          <span class="cat-icon">🧠</span>
-          <h5>RAM</h5>
-          <p>29 products</p>
-        </a>
-      </div>
-      <div class="col-6 col-md-4 col-lg-2">
-        <a href="#" class="category-card">
-          <span class="cat-icon">🖥️</span>
-          <h5>Accessories</h5>
-          <p>62 products</p>
-        </a>
-      </div>
+      @php
+        $categoryIconMap = [
+          'laptop' => '💻',
+          'gaming' => '🎮',
+          'batter' => '🔋',
+          'storage' => '💾',
+          'ram' => '🧠',
+          'accessor' => '🖥️',
+        ];
+      @endphp
+      @forelse(($featuredCategories ?? collect()) as $category)
+        @php
+          $categoryName = strtolower((string) $category->name);
+          $categoryIcon = '📦';
+
+          foreach ($categoryIconMap as $keyword => $icon) {
+              if (str_contains($categoryName, $keyword)) {
+                  $categoryIcon = $icon;
+                  break;
+              }
+          }
+
+          $categoryHref = auth()->check()
+              ? route('customer.shop.index', ['category' => [(int) $category->category_id]])
+              : route('customer.shop.index', ['category' => [(int) $category->category_id]]);
+
+          $categoryCount = (int) ($category->active_products_count ?? 0);
+        @endphp
+        <div class="col-6 col-md-4 col-lg-2">
+          <a href="{{ $categoryHref }}" class="category-card">
+            <span class="cat-icon">{{ $categoryIcon }}</span>
+            <h5>{{ $category->name }}</h5>
+            <p>{{ number_format($categoryCount) }} {{ $categoryCount === 1 ? 'product' : 'products' }}</p>
+          </a>
+        </div>
+      @empty
+        <div class="col-12">
+          <p style="font-size:.85rem;color:var(--muted)">No active categories available yet.</p>
+        </div>
+      @endforelse
     </div>
   </div>
 </section>
@@ -1007,7 +1002,7 @@
     <div class="d-flex flex-wrap gap-2 justify-content-center">
       @forelse(($featuredBrands ?? collect()) as $brand)
         <a
-          href="{{ auth()->check() ? route('customer.shop.search', ['q' => $brand->name]) : '#login' }}"
+          href="{{ route('customer.shop.search', ['q' => $brand->name]) }}"
           class="brand-pill"
         >
           {{ $brand->name }}
@@ -1030,7 +1025,7 @@
         <h2 class="section-heading mb-0">Featured Products</h2>
       </div>
       <a
-        href="{{ auth()->check() ? route('customer.shop.index') : '#login' }}"
+        href="{{ route('customer.shop.index') }}"
         style="font-size:.83rem;color:var(--blue);text-decoration:underline"
       >
         View all →
@@ -1046,7 +1041,7 @@
           $isLow = (int) $product->stock_qty <= (int) $product->low_stock_threshold;
           $productHref = auth()->check()
               ? route('customer.shop.show', $product->product_id)
-              : '#login';
+              : route('customer.shop.show', $product->product_id);
         @endphp
         <div class="col-12 col-sm-6 col-lg-3">
           <a href="{{ $productHref }}" class="product-card">

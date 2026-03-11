@@ -125,9 +125,99 @@
     padding: 1rem;
   }
 
+  .profile-photo-card {
+    border: 1px solid #e9e2d8;
+    border-radius: 10px;
+    background: #fff;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .profile-picture-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .85rem;
+    border: 1px solid #efe9df;
+    border-radius: 8px;
+    background: #fcfbf9;
+  }
+
+  .profile-picture-preview {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: 1px solid #d8d2c8;
+    object-fit: cover;
+    background: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    color: #7a756c;
+    overflow: hidden;
+  }
+
+  .profile-picture-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .profile-picture-meta {
+    font-size: .8rem;
+    color: #6c757d;
+    margin-top: .35rem;
+  }
+
+  .profile-picture-left {
+    display: flex;
+    align-items: center;
+    gap: .9rem;
+  }
+
+  .profile-picture-title {
+    font-size: .88rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    margin-bottom: .2rem;
+  }
+
+  .profile-picture-name {
+    font-size: .92rem;
+    color: #343a40;
+    margin: 0;
+  }
+
+  .profile-picture-form {
+    width: 100%;
+  }
+
+  .profile-picture-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .65rem;
+  }
+
+  .profile-file-input {
+    max-width: 320px;
+  }
+
   @media (max-width: 900px) {
     .account-grid {
       grid-template-columns: 1fr;
+    }
+
+    .profile-picture-wrap {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .profile-file-input {
+      max-width: 100%;
     }
   }
 </style>
@@ -170,6 +260,32 @@
   @if($errors->any())
     <div class="alert alert-danger">{{ $errors->first() }}</div>
   @endif
+
+  <div class="profile-photo-card">
+    <form action="{{ route('customer.account.profile.update') }}" method="post" enctype="multipart/form-data" class="profile-picture-form">
+      @csrf
+      <div class="profile-picture-wrap">
+        <div class="profile-picture-left">
+          <div class="profile-picture-preview" aria-hidden="true">
+            @if(auth()->user()->profile_image_url)
+              <img src="{{ auth()->user()->profile_image_url }}" alt="{{ auth()->user()->full_name }} profile photo">
+            @else
+              <i class="bi bi-person"></i>
+            @endif
+          </div>
+          <div>
+            <div class="profile-picture-title">Profile Photo</div>
+            <p class="profile-picture-name">{{ auth()->user()->full_name }}</p>
+            <div class="profile-picture-meta">JPG, PNG, or WebP up to 2MB.</div>
+          </div>
+        </div>
+        <div class="profile-picture-actions">
+          <input type="file" name="profile_image" class="form-control profile-file-input" accept="image/jpeg,image/png,image/webp" required>
+          <button type="submit" class="btn btn-danger">Upload Photo</button>
+        </div>
+      </div>
+    </form>
+  </div>
 
   <div class="account-grid">
     <div class="panel-card" id="profile">

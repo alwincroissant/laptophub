@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->redirectGuestsTo(fn () => route('index').'#login');
+
         $middleware->alias([
             'auth.admin' => EnsureAuthenticatedForAdmin::class,
             'admin' => EnsureUserIsAdmin::class,
