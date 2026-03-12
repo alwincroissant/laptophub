@@ -32,6 +32,12 @@ class AuthController extends Controller
                 ->withInput($request->only('email', 'remember'));
         }
 
+        if (! $user->email_verified_at) {
+            return back()
+                ->withErrors(['email' => 'Please verify your email address before logging in.'], 'login')
+                ->withInput($request->only('email', 'remember'));
+        }
+
         Auth::login($user, (bool) $request->boolean('remember'));
         $request->session()->regenerate();
 
@@ -68,12 +74,11 @@ class AuthController extends Controller
             'is_active' => true,
         ]);
 
-        Auth::login($user);
-        $request->session()->regenerate();
+        // Send email verification
+        $user->sendEmailVerificationNotification();
 
-        return redirect()
-            ->intended($this->redirectPathByRole($user))
-            ->with('success', 'Account created successfully. Welcome to LaptopHub!');
+        // Redirect to login page with message to check email
+        return redirect()->route('index')->with('success', 'Account created! Please check your email to verify your account before logging in.');
     }
 
     public function logout(Request $request): RedirectResponse

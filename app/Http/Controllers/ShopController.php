@@ -213,11 +213,20 @@ class ShopController extends Controller
             $selectedOrderItemId = 0;
         }
 
+        $editReviewId = (int) $request->query('edit_review', 0);
+        if ($editReviewId > 0 && Auth::check()) {
+            $editReview = Review::where('review_id', $editReviewId)
+                ->where('user_id', Auth::id())
+                ->where('product_id', $product->product_id)
+                ->first();
+        }
+
         return view('customer.shop.show', [
             'product' => $product,
             'reviews' => $reviews,
             'eligibleReviewItems' => $eligibleReviewItems,
             'selectedOrderItemId' => $selectedOrderItemId,
+            'editReview' => $editReview ?? null,
         ]);
     }
 }

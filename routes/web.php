@@ -22,7 +22,10 @@ use App\Http\Controllers\ReviewController;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Support\Facades\Auth;
 
 $landingPage = function () {
     $featuredCategories = Category::query()
@@ -135,6 +138,7 @@ Route::middleware(['auth', 'active'])->prefix('customer')->name('customer.')->gr
 
     // Reviews routes
     Route::post('/shop/{productId}/reviews', [ReviewController::class, 'store'])->name('shop.reviews.store');
+    Route::put('/shop/{productId}/reviews/{review}', [ReviewController::class, 'update'])->name('shop.reviews.update');
 
     // Account routes
     Route::get('/account/profile', [AccountController::class, 'profile'])->name('account.profile');
@@ -187,6 +191,8 @@ Route::middleware(['auth.admin', 'active', 'admin'])->prefix('admin')->name('adm
     Route::patch('/orders/{orderId}/status', [AdminOrderController::class, 'updateStatus'])->name('order.update-status');
 
     Route::get('/reviews', [AdminReviewController::class, 'index'])->name('review.index');
+    Route::get('/reviews/{review}/edit', [AdminReviewController::class, 'edit'])->name('review.edit');
+    Route::put('/reviews/{review}', [AdminReviewController::class, 'update'])->name('review.update');
     Route::patch('/reviews/{review}/visibility', [AdminReviewController::class, 'toggleVisibility'])->name('review.toggle-visibility');
     Route::delete('/reviews/{review}', [AdminReviewController::class, 'destroy'])->name('review.destroy');
 
@@ -222,4 +228,55 @@ Route::middleware(['auth.admin', 'active', 'admin'])->prefix('admin')->name('adm
     Route::put('/roles/{role}', [RoleController::class, 'update'])->name('role.update');
     Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('role.destroy');
 });
+
+// Email verification routes
+Route::get('/email/verify', function () {
+    return view('auth.verify-email');
+})->name('verification.notice');
+
+// Handle verification link
+Route::get('/email/verify/{id}/{hash}', function (\Illuminate\Http\Request $request, $id, $hash) {
+    $user = User::find($id);
+    
+    if (!$user) {
+        return redirect()->route('index')->with('error', 'Invalid verification link.');
+    }
+    
+    if ($user->hasVerifiedEmail()) {
+        return redirect()->route('index')->with('success', 'Your email is already verified. You can log in.');
+    }
+    
+    if (!hash_equals(sha1($user->getEmailForVerification()), $hash)) {
+        return redirect()->route('index')->with('error', 'Invalid verification link.');
+    }
+    
+    // Mark email as verified
+    $user->markEmailAsVerified();
+    
+    // Log the user in after successful verification
+    Auth::login($user);
+    $request->session()->regenerate();
+    
+    return redirect()->route('index')->with('success', 'Your email has been verified! You are now logged in.');
+})->middleware(['signed'])->name('verification.verify');
+
+// Resend verification link
+Route::post('/email/verification-notification', function (\Illuminate\Http\Request $request) {
+    $request->validate([
+        'email' => ['required', 'email']
+    ]);
+    
+    $user = User::where('email', $request->email)->first();
+    
+    if ($user && !$user->hasVerifiedEmail()) {
+        $user->sendEmailVerificationNotification();
+        return back()->with('success', 'Verification link sent! Please check your email.');
+    }
+    
+    if ($user && $user->hasVerifiedEmail()) {
+        return back()->with('error', 'This email is already verified. You can log in.');
+    }
+    
+    return back()->with('error', 'If an account with this email exists, a verification link has been sent.');
+})->middleware(['throttle:6,1'])->name('verification.send');
 

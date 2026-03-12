@@ -489,18 +489,60 @@
       <div class="review-list-card">
         @forelse(($reviews ?? collect()) as $review)
           <div class="review-list-item">
-            <div class="review-meta">
-              <div class="review-author">{{ $review->user->full_name ?? 'Customer' }}</div>
-              <div class="review-date">{{ optional($review->created_at)->format('M d, Y') }}</div>
-            </div>
-            <div class="review-stars" style="font-size:.82rem;margin-bottom:.3rem">
-              {{ str_repeat('★', (int) $review->rating) . str_repeat('☆', 5 - (int) $review->rating) }}
-            </div>
-            @if($review->title)
-              <div class="review-title">{{ $review->title }}</div>
-            @endif
-            @if($review->body)
-              <p class="review-body">{{ $review->body }}</p>
+            @if($editReview && (int) $editReview->review_id === (int) $review->review_id)
+              {{-- Inline edit form for this review --}}
+              <div class="review-meta" style="margin-bottom:.6rem">
+                <div class="review-author">{{ $review->user->full_name ?? 'Customer' }} <span style="font-size:.75rem;color:var(--muted);font-weight:400">— Editing</span></div>
+                <div class="review-date">{{ optional($review->created_at)->format('M d, Y') }}</div>
+              </div>
+              <form action="{{ route('customer.shop.reviews.update', [$product->product_id, $editReview->review_id]) }}" method="post">
+                @csrf
+                @method('PUT')
+                <div style="margin-bottom:.5rem">
+                  <label class="form-label" for="edit-rating" style="font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)">Rating</label>
+                  <select name="rating" id="edit-rating" class="form-select form-select-sm" required>
+                    <option value="5" @selected(old('rating', $editReview->rating) == 5)>5 - Excellent</option>
+                    <option value="4" @selected(old('rating', $editReview->rating) == 4)>4 - Very Good</option>
+                    <option value="3" @selected(old('rating', $editReview->rating) == 3)>3 - Good</option>
+                    <option value="2" @selected(old('rating', $editReview->rating) == 2)>2 - Fair</option>
+                    <option value="1" @selected(old('rating', $editReview->rating) == 1)>1 - Poor</option>
+                  </select>
+                </div>
+                <div style="margin-bottom:.5rem">
+                  <label class="form-label" for="edit-title" style="font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)">Title (optional)</label>
+                  <input type="text" id="edit-title" name="title" class="form-control form-control-sm" maxlength="150" value="{{ old('title', $editReview->title) }}">
+                </div>
+                <div style="margin-bottom:.5rem">
+                  <label class="form-label" for="edit-body" style="font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)">Review (optional)</label>
+                  <textarea id="edit-body" name="body" class="form-control form-control-sm" rows="3" maxlength="1500">{{ old('body', $editReview->body) }}</textarea>
+                </div>
+                <div class="d-flex gap-2">
+                  <button type="submit" class="btn-add-cart">Save Changes</button>
+                  <a href="{{ route('customer.shop.show', $product->product_id) }}#reviews" class="btn-back" style="padding:.55rem .9rem;font-size:.82rem">Cancel</a>
+                </div>
+              </form>
+            @else
+              {{-- Normal review display --}}
+              <div class="review-meta">
+                <div class="review-author">{{ $review->user->full_name ?? 'Customer' }}</div>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="review-date">{{ optional($review->created_at)->format('M d, Y') }}</span>
+                  @auth
+                    @if((int) $review->user_id === (int) Auth::id())
+                      <a href="{{ route('customer.shop.show', $product->product_id) }}?edit_review={{ $review->review_id }}#reviews" style="font-size:.75rem;color:var(--blue);text-decoration:none;font-weight:600">Edit</a>
+                    @endif
+                  @endauth
+                </div>
+              </div>
+              <div class="review-stars" style="font-size:.82rem;margin-bottom:.3rem">
+                {{ str_repeat('★', (int) $review->rating) . str_repeat('☆', 5 - (int) $review->rating) }}
+              </div>
+              @if($review->title)
+                <div class="review-title">{{ $review->title }}</div>
+              @endif
+              @if($review->body)
+                <p class="review-body">{{ $review->body }}</p>
+              @endif
             @endif
           </div>
         @empty

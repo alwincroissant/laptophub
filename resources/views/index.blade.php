@@ -772,6 +772,10 @@
             Don't have an account?
             <a href="#register" style="color:var(--blue)">Register here</a>
           </div>
+          <div class="form-footer mt-2">
+            Need to verify your email?
+            <a href="{{ route('verification.notice') }}" style="color:var(--blue)">Resend verification</a>
+          </div>
         </form>
       </div>
 

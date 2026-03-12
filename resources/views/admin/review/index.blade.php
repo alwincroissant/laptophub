@@ -125,6 +125,9 @@
                         <td>{{ optional($review->created_at)->format('M d, Y h:i A') ?? 'N/A' }}</td>
                         <td>
                             <div class="d-flex gap-2">
+                                <a href="{{ route('admin.review.edit', $review->review_id) }}" class="btn btn-sm btn-outline-primary" title="Edit review">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
                                 <form action="{{ route('admin.review.toggle-visibility', $review->review_id) }}" method="POST" style="margin:0">
                                     @csrf
                                     @method('PATCH')

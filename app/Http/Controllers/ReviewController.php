@@ -61,4 +61,29 @@ class ReviewController extends Controller
             ->to(route('customer.shop.show', $product->product_id) . '#reviews')
             ->with('success', 'Thanks for your review.');
     }
+
+    public function update(Request $request, int $productId, Review $review): RedirectResponse
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        if ((int) $review->user_id !== (int) $user->user_id) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'rating' => ['required', 'integer', 'between:1,5'],
+            'title' => ['nullable', 'string', 'max:150'],
+            'body' => ['nullable', 'string', 'max:1500'],
+        ]);
+
+        $review->rating = (int) $data['rating'];
+        $review->title = trim((string) ($data['title'] ?? '')) ?: null;
+        $review->body = trim((string) ($data['body'] ?? '')) ?: null;
+        $review->save();
+
+        return redirect()
+            ->to(route('customer.shop.show', $productId) . '#reviews')
+            ->with('success', 'Your review has been updated.');
+    }
 }

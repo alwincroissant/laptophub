@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('contact_number', 20)->nullable();
             $table->text('address')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->timestamp('email_verified_at')->nullable();
             $table->dateTime('created_at')->useCurrent();
             $table->dateTime('updated_at')->useCurrent()->useCurrentOnUpdate();
         });
