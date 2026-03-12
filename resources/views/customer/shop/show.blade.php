@@ -501,11 +501,11 @@
                 <div style="margin-bottom:.5rem">
                   <label class="form-label" for="edit-rating" style="font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)">Rating</label>
                   <select name="rating" id="edit-rating" class="form-select form-select-sm" required>
-                    <option value="5" @selected(old('rating', $editReview->rating) == 5)>5 - Excellent</option>
-                    <option value="4" @selected(old('rating', $editReview->rating) == 4)>4 - Very Good</option>
-                    <option value="3" @selected(old('rating', $editReview->rating) == 3)>3 - Good</option>
-                    <option value="2" @selected(old('rating', $editReview->rating) == 2)>2 - Fair</option>
-                    <option value="1" @selected(old('rating', $editReview->rating) == 1)>1 - Poor</option>
+                    <option value="5" {{ old('rating', $editReview->rating) == 5 ? 'selected' : '' }}>5 - Excellent</option>
+                    <option value="4" {{ old('rating', $editReview->rating) == 4 ? 'selected' : '' }}>4 - Very Good</option>
+                    <option value="3" {{ old('rating', $editReview->rating) == 3 ? 'selected' : '' }}>3 - Good</option>
+                    <option value="2" {{ old('rating', $editReview->rating) == 2 ? 'selected' : '' }}>2 - Fair</option>
+                    <option value="1" {{ old('rating', $editReview->rating) == 1 ? 'selected' : '' }}>1 - Poor</option>
                   </select>
                 </div>
                 <div style="margin-bottom:.5rem">
