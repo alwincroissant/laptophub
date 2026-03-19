@@ -17,7 +17,7 @@ class EnsureStrictAdmin
         $roleName = $request->user() ? Role::where('role_id', $request->user()->role_id)->value('role_name') : null;
         
         if (strtolower($roleName) !== 'admin') {
-            abort(403, 'Unauthorized access to restricted admin module.');
+            return redirect()->route('admin.dashboard')->with('error', 'Unauthorized access to restricted admin module.');
         }
         
         return $next($request);

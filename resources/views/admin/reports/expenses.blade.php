@@ -48,13 +48,18 @@
     </div>
 
     <!-- Expenses Metric Ribbon -->
-    <div class="row align-items-stretch">
+    <div class="row align-items-stretch mb-5">
         <div class="col-lg-5 mb-4 mb-lg-0">
-            <div class="card shadow-sm border-0 bg-dark text-white h-100">
-                <div class="card-body d-flex flex-column justify-content-center align-items-center p-5">
-                    <i class="bi bi-piggy-bank opacity-50 mb-3" style="font-size: 3rem;"></i>
-                    <h6 class="text-uppercase mb-2 text-center" style="letter-spacing: 1px; font-size: 0.8rem; color: rgba(255,255,255,0.7);">Total Capital Expenditure</h6>
-                    <h1 class="mb-0 fw-bold text-success text-center break-word">₱{{ number_format($totalExpenses, 2) }}</h1>
+            <div class="card justify-content-center shadow-lg border-0 text-white h-100" style="background: linear-gradient(135deg, #cb2d3e 0%, #ef473a 100%);">
+                <div class="card-body position-relative overflow-hidden p-5 d-flex flex-column justify-content-center">
+                    <i class="bi bi-piggy-bank position-absolute text-white" style="font-size: 10rem; right: -15px; top: -20px; opacity: 0.1;"></i>
+                    <div class="position-relative z-index-1">
+                        <h6 class="text-uppercase mb-2 text-white-50" style="letter-spacing: 1.5px; font-weight: 600;">Gross Capital Expenditure</h6>
+                        <h1 class="display-4 fw-bolder mb-0 text-white shadow-sm">₱{{ number_format($totalExpenses, 2) }}</h1>
+                        <p class="mt-3 mb-0 text-white-50" style="font-size: 0.85rem; font-weight: 500;">
+                            <i class="bi bi-cart-check me-1"></i> Total spent on supplier restocks
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>

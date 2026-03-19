@@ -56,9 +56,14 @@
         <a href="{{ route('admin.restock.index') }}" class="nav-link {{ (($activeNav ?? '') === 'restock') ? 'active' : '' }}"><i class="bi bi-arrow-repeat"></i> Restock Log</a>
 
         @if(strtolower($adminUser->role->role_name ?? '') === 'admin')
+    <div class="nav-section">
         <div class="nav-section-label">Reports</div>
+        <a href="{{ route('admin.reports.sales') }}" class="nav-link {{ (($activeNav ?? '') === 'sales_report') ? 'active' : '' }}"><i class="bi bi-wallet2"></i> Sales Report</a>
+        <a href="{{ route('admin.reports.inventory') }}" class="nav-link {{ (($activeNav ?? '') === 'inventory_report') ? 'active' : '' }}"><i class="bi bi-boxes"></i> Inventory Stock</a>
         <a href="{{ route('admin.reports.expenses') }}" class="nav-link {{ (($activeNav ?? '') === 'expenses') ? 'active' : '' }}"><i class="bi bi-graph-up-arrow"></i> Capital Expenses</a>
-
+        <a href="{{ route('admin.reports.orders') }}" class="nav-link {{ (($activeNav ?? '') === 'order_summary') ? 'active' : '' }}"><i class="bi bi-list-check"></i> Order Summary</a>
+        <a href="{{ route('admin.reports.top-products') }}" class="nav-link {{ (($activeNav ?? '') === 'top_products') ? 'active' : '' }}"><i class="bi bi-star"></i> Top Products</a>
+    </div>
         <div class="nav-section-label">Users</div>
         <a href="{{ route('admin.user.index') }}" class="nav-link {{ (($activeNav ?? '') === 'user') ? 'active' : '' }}"><i class="bi bi-people"></i> All Users</a>
         <a href="{{ route('admin.role.index') }}" class="nav-link {{ (($activeNav ?? '') === 'role') ? 'active' : '' }}"><i class="bi bi-shield-lock"></i> Roles</a>

@@ -14,6 +14,13 @@
 @endsection
 
 @section('admin_content')
+    @if (session('success'))
+        <div class="alert alert-success border-0 shadow-sm"><i class="bi bi-check-circle-fill me-2"></i>{{ session('success') }}</div>
+    @endif
+    @if (session('error'))
+        <div class="alert alert-danger border-0 shadow-sm"><i class="bi bi-exclamation-triangle-fill me-2"></i>{{ session('error') }}</div>
+    @endif
+
     <div class="row g-3 mb-4">
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="stat-card red">
@@ -51,7 +58,9 @@
             <div class="table-card">
                 <div class="card-header">
                     <h5>Recent Orders</h5>
+                    @if(strtolower(auth()->user()->role->role_name ?? '') === 'admin')
                     <a href="{{ route('admin.order.index') }}" class="btn btn-sm btn-outline-secondary" style="font-size:.75rem">View All</a>
+                    @endif
                 </div>
                 <div class="table-responsive">
                     <table class="table mb-0">
@@ -90,7 +99,11 @@
                                 <td class="text-end">P{{ number_format($orderTotal, 2) }}</td>
                                 <td><span class="badge bg-light text-dark border">{{ $order->paymentMethod->method_name ?? 'N/A' }}</span></td>
                                 <td><span class="status-badge {{ $statusClass }}">{{ $order->status->status_name ?? 'Unknown' }}</span></td>
-                                <td><a href="{{ route('admin.order.show', $order->order_id) }}" style="font-size:.75rem;color:var(--accent2)">View</a></td>
+                                <td>
+                                    @if(strtolower(auth()->user()->role->role_name ?? '') === 'admin')
+                                    <a href="{{ route('admin.order.show', $order->order_id) }}" style="font-size:.75rem;color:var(--accent2)">View</a>
+                                    @endif
+                                </td>
                             </tr>
                         @empty
                             <tr>
@@ -112,12 +125,14 @@
                         Add Product
                     </a>
                 </div>
+                @if(strtolower(auth()->user()->role->role_name ?? '') === 'admin')
                 <div class="col-6">
                     <a href="{{ route('admin.user.create') }}" class="quick-btn">
                         <i class="bi bi-person-plus"></i>
                         Add User
                     </a>
                 </div>
+                @endif
                 <div class="col-6">
                     <a href="{{ route('admin.supplier.create') }}" class="quick-btn">
                         <i class="bi bi-truck"></i>
@@ -285,7 +300,9 @@
             <div class="table-card">
                 <div class="card-header">
                     <h5>Recent Users</h5>
+                    @if(strtolower(auth()->user()->role->role_name ?? '') === 'admin')
                     <a href="{{ route('admin.user.index') }}" class="btn btn-sm btn-outline-secondary" style="font-size:.75rem">Manage Users</a>
+                    @endif
                 </div>
                 <table class="table mb-0">
                     <thead>

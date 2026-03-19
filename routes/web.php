@@ -230,6 +230,12 @@ Route::middleware(['auth.admin', 'active', 'admin'])->prefix('admin')->name('adm
         Route::patch('/reviews/{review}/visibility', [AdminReviewController::class, 'toggleVisibility'])->name('review.toggle-visibility');
         Route::delete('/reviews/{review}', [AdminReviewController::class, 'destroy'])->name('review.destroy');
 
+        // FR1.9 Legacy Standard Reports Module Node
+        Route::get('/reports/sales', [\App\Http\Controllers\ReportController::class, 'sales'])->name('reports.sales');
+        Route::get('/reports/inventory', [\App\Http\Controllers\ReportController::class, 'inventory'])->name('reports.inventory');
+        Route::get('/reports/orders', [\App\Http\Controllers\ReportController::class, 'orders'])->name('reports.orders');
+        Route::get('/reports/top-products', [\App\Http\Controllers\ReportController::class, 'topProducts'])->name('reports.top-products');
+        
         Route::get('/reports/expenses', [ExpenseReportController::class, 'expenses'])->name('reports.expenses');
 
         Route::get('/users', [UserController::class, 'index'])->name('user.index');
