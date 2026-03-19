@@ -19,7 +19,7 @@ class EnsureUserIsAdmin
             ? Role::where('role_id', $user->role_id)->value('role_name')
             : null;
 
-        if (! $user || $roleName !== 'Admin') {
+        if (! $user || ! in_array($roleName, ['Admin', 'InventoryManager'])) {
             return redirect()->route('index')->with('error', 'Unauthorized access to admin dashboard.');
         }
 

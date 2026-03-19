@@ -85,23 +85,45 @@
       overflow: hidden;
     }
 
-    .detail-image {
-      width: 100%;
-      max-height: 480px;
-      object-fit: cover;
-      display: block;
-      background: var(--cream);
+    /* ── CSS GALLERY ── */
+    .css-gallery { width: 100%; margin-bottom: 1rem; }
+    .gallery-main {
+      position: relative; width: 100%; padding-bottom: 100%;
+      background: var(--cream); border-radius: 8px; overflow: hidden;
+      border: 1px solid var(--border);
     }
+    .gallery-main img.main-img {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      object-fit: contain; opacity: 0; transition: opacity 0.3s ease; z-index: 1;
+      background: #fff;
+    }
+    .gallery-main .fallback {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3.5rem; color: var(--muted);
+    }
+    .gallery-radio { display: none; }
 
-    .detail-image-fallback {
-      height: 320px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--cream);
-      color: var(--muted);
-      font-size: 2.5rem;
+    @for ($i = 0; $i < 20; $i++)
+      #img-{{ $i }}:checked ~ .gallery-main #main-img-{{ $i }} { opacity: 1; z-index: 2; }
+      #img-{{ $i }}:checked ~ .gallery-thumbs [for="img-{{ $i }}"] {
+        opacity: 1; border-color: var(--red); box-shadow: 0 0 0 1.5px var(--red);
+      }
+    @endfor
+
+    .gallery-thumbs {
+      display: flex; gap: .75rem; overflow-x: auto; padding-bottom: .5rem; margin-top: 1rem;
     }
+    .gallery-thumbs::-webkit-scrollbar { display: none; }
+    .gallery-thumbs { -ms-overflow-style: none; scrollbar-width: none; }
+    .gallery-thumbs .thumb-label {
+      cursor: pointer; display: block; width: 80px; height: 80px;
+      flex-shrink: 0; border: 1px solid var(--border); border-radius: 6px;
+      overflow: hidden; opacity: 0.6; transition: opacity 0.2s, border-color 0.2s;
+      background: #fff;
+    }
+    .gallery-thumbs .thumb-label img { width: 100%; height: 100%; object-fit: cover; }
+    .gallery-thumbs .thumb-label:hover { opacity: .9; }
 
     .detail-body {
       padding: 1.5rem;
@@ -370,14 +392,46 @@
 
 <section class="py-5">
   <div class="container">
-    <div class="detail-card">
-      @if($product->image_url)
-        <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="detail-image">
-      @else
-        <div class="detail-image-fallback"><i class="bi bi-image"></i></div>
-      @endif
+    <div class="detail-card row g-0">
+      <div class="col-12 col-md-5 p-4 border-end-md pb-0">
+        @php
+          $allImages = collect();
+          if ($product->image_url) $allImages->push($product->image_url);
+          if ($product->images) {
+              foreach($product->images as $img) $allImages->push($img->image_url);
+          }
+        @endphp
 
-      <div class="detail-body">
+        <div class="css-gallery">
+          @if($allImages->isNotEmpty())
+            @foreach($allImages as $index => $imgUrl)
+              <input type="radio" name="gallery" id="img-{{ $index }}" class="gallery-radio" {{ $index === 0 ? 'checked' : '' }}>
+            @endforeach
+
+            <div class="gallery-main">
+              @foreach($allImages as $index => $imgUrl)
+                <img src="{{ $imgUrl }}" class="main-img" id="main-img-{{ $index }}" alt="{{ $product->name }}">
+              @endforeach
+            </div>
+
+            @if($allImages->count() > 1)
+            <div class="gallery-thumbs">
+              @foreach($allImages as $index => $imgUrl)
+                <label for="img-{{ $index }}" class="thumb-label">
+                  <img src="{{ $imgUrl }}" alt="Thumbnail {{ $index }}">
+                </label>
+              @endforeach
+            </div>
+            @endif
+          @else
+            <div class="gallery-main" style="margin-bottom:0">
+              <div class="fallback"><i class="bi bi-image"></i></div>
+            </div>
+          @endif
+        </div>
+      </div>
+
+      <div class="col-12 col-md-7 detail-body">
         <div class="meta">{{ $product->brand->name ?? 'Unbranded' }} • {{ $product->category->name ?? 'Uncategorized' }}</div>
         <h2 class="title">{{ $product->name }}</h2>
         <div class="price">₱{{ number_format($product->price, 2) }}</div>
@@ -492,7 +546,11 @@
             @if($editReview && (int) $editReview->review_id === (int) $review->review_id)
               {{-- Inline edit form for this review --}}
               <div class="review-meta" style="margin-bottom:.6rem">
-                <div class="review-author">{{ $review->user->full_name ?? 'Customer' }} <span style="font-size:.75rem;color:var(--muted);font-weight:400">— Editing</span></div>
+                <div class="review-author d-flex align-items-center mb-1">
+                  {{ $review->user->full_name ?? 'Customer' }}
+                  <span class="badge bg-success bg-opacity-10 text-success border border-success ms-2 fw-normal d-flex align-items-center" style="font-size:0.65rem; padding: 0.2rem 0.4rem; letter-spacing: 0.03em;"><i class="bi bi-patch-check-fill me-1"></i>Verified Purchase</span>
+                  <span style="font-size:.75rem;color:var(--muted);font-weight:400;margin-left:.4rem;">— Editing</span>
+                </div>
                 <div class="review-date">{{ optional($review->created_at)->format('M d, Y') }}</div>
               </div>
               <form action="{{ route('customer.shop.reviews.update', [$product->product_id, $editReview->review_id]) }}" method="post">
@@ -524,12 +582,20 @@
             @else
               {{-- Normal review display --}}
               <div class="review-meta">
-                <div class="review-author">{{ $review->user->full_name ?? 'Customer' }}</div>
+                <div class="review-author d-flex align-items-center mb-1">
+                  {{ $review->user->full_name ?? 'Customer' }}
+                  <span class="badge bg-success bg-opacity-10 text-success border border-success ms-2 fw-normal d-flex align-items-center" style="font-size:0.65rem; padding: 0.2rem 0.4rem; letter-spacing: 0.03em;"><i class="bi bi-patch-check-fill me-1"></i>Verified Purchase</span>
+                </div>
                 <div class="d-flex align-items-center gap-2">
                   <span class="review-date">{{ optional($review->created_at)->format('M d, Y') }}</span>
                   @auth
                     @if((int) $review->user_id === (int) Auth::id())
-                      <a href="{{ route('customer.shop.show', $product->product_id) }}?edit_review={{ $review->review_id }}#reviews" style="font-size:.75rem;color:var(--blue);text-decoration:none;font-weight:600">Edit</a>
+                      <a href="{{ route('customer.shop.show', $product->product_id) }}?edit_review={{ $review->review_id }}#reviews" style="font-size:.85rem;color:var(--blue);text-decoration:none;font-weight:600" title="Edit Review"><i class="bi bi-pencil-square"></i></a>
+                      <form action="{{ route('customer.shop.reviews.destroy', [$product->product_id, $review->review_id]) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to permanently delete this review?');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-link p-0 m-0 align-baseline text-danger ms-1" style="font-size:.85rem;text-decoration:none;font-weight:600" title="Delete Review"><i class="bi bi-trash"></i></button>
+                      </form>
                     @endif
                   @endauth
                 </div>

@@ -44,14 +44,20 @@
         <a href="{{ route('admin.category.index') }}" class="nav-link {{ (($activeNav ?? '') === 'category') ? 'active' : '' }}"><i class="bi bi-tags"></i> Categories</a>
         <a href="{{ route('admin.brand.index') }}" class="nav-link {{ (($activeNav ?? '') === 'brand') ? 'active' : '' }}"><i class="bi bi-award"></i> Brands</a>
 
+        @if(strtolower($adminUser->role->role_name ?? '') === 'admin')
         <div class="nav-section-label">Commerce</div>
         <a href="{{ route('admin.order.index') }}" class="nav-link {{ (($activeNav ?? '') === 'order') ? 'active' : '' }}"><i class="bi bi-bag-check"></i> Orders</a>
         <a href="{{ route('admin.review.index') }}" class="nav-link {{ (($activeNav ?? '') === 'review') ? 'active' : '' }}"><i class="bi bi-star-half"></i> Reviews</a>
+        @endif
 
         <div class="nav-section-label">Operations</div>
         <a href="{{ route('admin.inventory.index') }}" class="nav-link {{ (($activeNav ?? '') === 'inventory') ? 'active' : '' }}"><i class="bi bi-box-seam"></i> Inventory</a>
         <a href="{{ route('admin.supplier.index') }}" class="nav-link {{ (($activeNav ?? '') === 'supplier') ? 'active' : '' }}"><i class="bi bi-truck"></i> Suppliers</a>
-        <a href="#" class="nav-link"><i class="bi bi-arrow-repeat"></i> Restock Log</a>
+        <a href="{{ route('admin.restock.index') }}" class="nav-link {{ (($activeNav ?? '') === 'restock') ? 'active' : '' }}"><i class="bi bi-arrow-repeat"></i> Restock Log</a>
+
+        @if(strtolower($adminUser->role->role_name ?? '') === 'admin')
+        <div class="nav-section-label">Reports</div>
+        <a href="{{ route('admin.reports.expenses') }}" class="nav-link {{ (($activeNav ?? '') === 'expenses') ? 'active' : '' }}"><i class="bi bi-graph-up-arrow"></i> Capital Expenses</a>
 
         <div class="nav-section-label">Users</div>
         <a href="{{ route('admin.user.index') }}" class="nav-link {{ (($activeNav ?? '') === 'user') ? 'active' : '' }}"><i class="bi bi-people"></i> All Users</a>
@@ -59,6 +65,7 @@
 
         <div class="nav-section-label">System</div>
         <a href="#" class="nav-link"><i class="bi bi-gear"></i> Settings</a>
+        @endif
     </nav>
 
     <div class="sidebar-footer">

@@ -9,6 +9,8 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\AdminReviewController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\RestockTransactionController;
+use App\Http\Controllers\ExpenseReportController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
@@ -22,7 +24,6 @@ use App\Http\Controllers\ReviewController;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Auth;
@@ -139,6 +140,7 @@ Route::middleware(['auth', 'active'])->prefix('customer')->name('customer.')->gr
     // Reviews routes
     Route::post('/shop/{productId}/reviews', [ReviewController::class, 'store'])->name('shop.reviews.store');
     Route::put('/shop/{productId}/reviews/{review}', [ReviewController::class, 'update'])->name('shop.reviews.update');
+    Route::delete('/shop/{productId}/reviews/{review}', [ReviewController::class, 'destroy'])->name('shop.reviews.destroy');
 
     // Account routes
     Route::get('/account/profile', [AccountController::class, 'profile'])->name('account.profile');
@@ -150,6 +152,7 @@ Route::middleware(['auth', 'active'])->prefix('customer')->name('customer.')->gr
     Route::put('/account/addresses/{address}', [AccountController::class, 'updateAddress'])->name('account.addresses.update');
     Route::post('/account/addresses/{address}/default', [AccountController::class, 'setDefaultAddress'])->name('account.addresses.default');
     Route::delete('/account/addresses/{address}', [AccountController::class, 'destroyAddress'])->name('account.addresses.destroy');
+    Route::delete('/account/deactivate', [AccountController::class, 'deactivate'])->name('account.deactivate');
 });
 
 Route::middleware(['auth.admin', 'active', 'admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -186,15 +189,10 @@ Route::middleware(['auth.admin', 'active', 'admin'])->prefix('admin')->name('adm
     Route::patch('/brands/{brandId}/restore', [BrandController::class, 'restore'])->name('brand.restore');
     Route::delete('/brands/{brandId}/force', [BrandController::class, 'forceDestroy'])->name('brand.force-destroy');
 
-    Route::get('/orders', [AdminOrderController::class, 'index'])->name('order.index');
-    Route::get('/orders/{orderId}', [AdminOrderController::class, 'show'])->name('order.show');
-    Route::patch('/orders/{orderId}/status', [AdminOrderController::class, 'updateStatus'])->name('order.update-status');
-
-    Route::get('/reviews', [AdminReviewController::class, 'index'])->name('review.index');
-    Route::get('/reviews/{review}/edit', [AdminReviewController::class, 'edit'])->name('review.edit');
-    Route::put('/reviews/{review}', [AdminReviewController::class, 'update'])->name('review.update');
-    Route::patch('/reviews/{review}/visibility', [AdminReviewController::class, 'toggleVisibility'])->name('review.toggle-visibility');
-    Route::delete('/reviews/{review}', [AdminReviewController::class, 'destroy'])->name('review.destroy');
+    // ============================================
+    // UNIVERSAL ADMIN MODULES
+    // (Accessible by Admin AND Inventory Manager)
+    // ============================================
 
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
     Route::get('/inventory/create', [InventoryController::class, 'create'])->name('inventory.create');
@@ -206,27 +204,51 @@ Route::middleware(['auth.admin', 'active', 'admin'])->prefix('admin')->name('adm
     Route::get('/suppliers', [SupplierController::class, 'index'])->name('supplier.index');
     Route::get('/suppliers/create', [SupplierController::class, 'create'])->name('supplier.create');
     Route::post('/suppliers', [SupplierController::class, 'store'])->name('supplier.store');
+    Route::get('/suppliers/{supplier}', [SupplierController::class, 'show'])->name('supplier.show');
     Route::get('/suppliers/{supplier}/edit', [SupplierController::class, 'edit'])->name('supplier.edit');
     Route::put('/suppliers/{supplier}', [SupplierController::class, 'update'])->name('supplier.update');
     Route::delete('/suppliers/{supplier}', [SupplierController::class, 'destroy'])->name('supplier.destroy');
     Route::patch('/suppliers/{supplierId}/restore', [SupplierController::class, 'restore'])->name('supplier.restore');
     Route::delete('/suppliers/{supplierId}/force', [SupplierController::class, 'forceDestroy'])->name('supplier.force-destroy');
 
-    Route::get('/users', [UserController::class, 'index'])->name('user.index');
-    Route::get('/users/create', [UserController::class, 'create'])->name('user.create');
-    Route::post('/users', [UserController::class, 'store'])->name('user.store');
-    Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('user.edit');
-    Route::put('/users/{user}', [UserController::class, 'update'])->name('user.update');
-    Route::patch('/users/{user}/activate', [UserController::class, 'activate'])->name('user.activate');
-    Route::patch('/users/{user}/deactivate', [UserController::class, 'deactivate'])->name('user.deactivate');
-    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('user.destroy');
+    Route::get('/restocks', [RestockTransactionController::class, 'index'])->name('restock.index');
+    Route::post('/restocks/store', [RestockTransactionController::class, 'store'])->name('restock.store');
 
-    Route::get('/roles', [RoleController::class, 'index'])->name('role.index');
-    Route::get('/roles/create', [RoleController::class, 'create'])->name('role.create');
-    Route::post('/roles', [RoleController::class, 'store'])->name('role.store');
-    Route::get('/roles/{role}/edit', [RoleController::class, 'edit'])->name('role.edit');
-    Route::put('/roles/{role}', [RoleController::class, 'update'])->name('role.update');
-    Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('role.destroy');
+    // ============================================
+    // STRICT ADMIN MODULES
+    // (Blocked for Inventory Managers)
+    // ============================================
+    Route::middleware(\App\Http\Middleware\EnsureStrictAdmin::class)->group(function () {
+        
+        Route::get('/orders', [AdminOrderController::class, 'index'])->name('order.index');
+        Route::get('/orders/{orderId}', [AdminOrderController::class, 'show'])->name('order.show');
+        Route::patch('/orders/{orderId}/status', [AdminOrderController::class, 'updateStatus'])->name('order.update-status');
+
+        Route::get('/reviews', [AdminReviewController::class, 'index'])->name('review.index');
+        Route::get('/reviews/{review}/edit', [AdminReviewController::class, 'edit'])->name('review.edit');
+        Route::put('/reviews/{review}', [AdminReviewController::class, 'update'])->name('review.update');
+        Route::patch('/reviews/{review}/visibility', [AdminReviewController::class, 'toggleVisibility'])->name('review.toggle-visibility');
+        Route::delete('/reviews/{review}', [AdminReviewController::class, 'destroy'])->name('review.destroy');
+
+        Route::get('/reports/expenses', [ExpenseReportController::class, 'expenses'])->name('reports.expenses');
+
+        Route::get('/users', [UserController::class, 'index'])->name('user.index');
+        Route::get('/users/create', [UserController::class, 'create'])->name('user.create');
+        Route::post('/users', [UserController::class, 'store'])->name('user.store');
+        Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('user.edit');
+        Route::put('/users/{user}', [UserController::class, 'update'])->name('user.update');
+        Route::patch('/users/{user}/activate', [UserController::class, 'activate'])->name('user.activate');
+        Route::patch('/users/{user}/deactivate', [UserController::class, 'deactivate'])->name('user.deactivate');
+        Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('user.destroy');
+
+        Route::get('/roles', [RoleController::class, 'index'])->name('role.index');
+        Route::get('/roles/create', [RoleController::class, 'create'])->name('role.create');
+        Route::post('/roles', [RoleController::class, 'store'])->name('role.store');
+        Route::get('/roles/{role}/edit', [RoleController::class, 'edit'])->name('role.edit');
+        Route::put('/roles/{role}', [RoleController::class, 'update'])->name('role.update');
+        Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('role.destroy');
+
+    });
 });
 
 // Email verification routes
@@ -235,48 +257,33 @@ Route::get('/email/verify', function () {
 })->name('verification.notice');
 
 // Handle verification link
-Route::get('/email/verify/{id}/{hash}', function (\Illuminate\Http\Request $request, $id, $hash) {
-    $user = User::find($id);
-    
-    if (!$user) {
-        return redirect()->route('index')->with('error', 'Invalid verification link.');
+Route::get('/email/verify/{id}/{hash}', function ($id, $hash) {
+    $user = \App\Models\User::find($id);
+
+    if (! $user || ! hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+        return redirect()->route('index')->with('error', 'Invalid or expired verification link.');
     }
-    
-    if ($user->hasVerifiedEmail()) {
-        return redirect()->route('index')->with('success', 'Your email is already verified. You can log in.');
+
+    if (! $user->hasVerifiedEmail()) {
+        $user->markEmailAsVerified();
     }
-    
-    if (!hash_equals(sha1($user->getEmailForVerification()), $hash)) {
-        return redirect()->route('index')->with('error', 'Invalid verification link.');
-    }
-    
-    // Mark email as verified
-    $user->markEmailAsVerified();
-    
-    // Log the user in after successful verification
-    Auth::login($user);
-    $request->session()->regenerate();
-    
-    return redirect()->route('index')->with('success', 'Your email has been verified! You are now logged in.');
+
+    return redirect()->route('index')->with('success', 'Your email has been verified! You can now log in.');
 })->middleware(['signed'])->name('verification.verify');
 
 // Resend verification link
 Route::post('/email/verification-notification', function (\Illuminate\Http\Request $request) {
-    $request->validate([
-        'email' => ['required', 'email']
-    ]);
-    
-    $user = User::where('email', $request->email)->first();
-    
-    if ($user && !$user->hasVerifiedEmail()) {
+    if (auth()->check()) {
+        $user = $request->user();
+    } else {
+        $request->validate(['email' => 'required|email']);
+        $user = \App\Models\User::where('email', $request->email)->first();
+    }
+
+    if ($user && ! $user->hasVerifiedEmail()) {
         $user->sendEmailVerificationNotification();
-        return back()->with('success', 'Verification link sent! Please check your email.');
     }
-    
-    if ($user && $user->hasVerifiedEmail()) {
-        return back()->with('error', 'This email is already verified. You can log in.');
-    }
-    
-    return back()->with('error', 'If an account with this email exists, a verification link has been sent.');
+
+    return back()->with('success', 'If an account with that email exists and is unverified, a verification link has been sent!');
 })->middleware(['throttle:6,1'])->name('verification.send');
 

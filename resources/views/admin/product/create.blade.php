@@ -75,9 +75,15 @@
                     </div>
 
                     <div class="col-12">
-                        <label class="form-label" for="image">Product Image</label>
+                        <label class="form-label" for="image">Main Product Image</label>
                         <input id="image" name="image" type="file" class="form-control" accept="image/png,image/jpeg,image/webp">
-                        <small class="text-muted">Optional. JPG, PNG, or WEBP up to 2MB.</small>
+                        <small class="text-muted d-block">Optional. Primary image used in catalog. JPG, PNG, or WEBP up to 2MB.</small>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label" for="gallery_images">Additional Gallery Images</label>
+                        <input id="gallery_images" name="gallery_images[]" type="file" multiple class="form-control" accept="image/png,image/jpeg,image/webp">
+                        <small class="text-muted d-block">Optional. Select multiple files for the interactive gallery on the product page.</small>
                     </div>
 
                     <div class="col-12">

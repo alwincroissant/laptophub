@@ -89,6 +89,17 @@ class SupplierController extends Controller
         return redirect()->route('admin.supplier.index')->with('success', 'Supplier created successfully.');
     }
 
+    public function show(Supplier $supplier)
+    {
+        $supplier->load(['products' => function ($query) {
+            $query->where('is_archived', false)
+                  ->whereNull('deleted_at')
+                  ->orderBy('name');
+        }]);
+
+        return view('admin.supplier.show', compact('supplier'));
+    }
+
     public function edit(Supplier $supplier)
     {
         $products = Product::query()

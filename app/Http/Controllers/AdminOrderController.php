@@ -7,6 +7,8 @@ use App\Models\OrderStatus;
 use App\Models\OrderStatusLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\OrderStatusUpdated;
 
 class AdminOrderController extends Controller
 {
@@ -119,7 +121,10 @@ class AdminOrderController extends Controller
 
         $order = Order::findOrFail($orderId);
 
-        if ((int) $order->status_id === (int) $data['status_id']) {
+        $oldStatusId = (int) $order->status_id;
+        $newStatusId = (int) $data['status_id'];
+
+        if ($oldStatusId === $newStatusId) {
             return redirect()
                 ->back()
                 ->with('success', 'Order status is already set to the selected value.');
@@ -127,20 +132,40 @@ class AdminOrderController extends Controller
 
         /** @var \App\Models\User $user */
         $user = auth()->user();
+        
+        $order->loadMissing('items');
+        $statuses = OrderStatus::get();
+        $cancelledStatusId = $this->statusIdByName($statuses, 'Cancelled');
 
-        DB::transaction(function () use ($order, $data, $user) {
-            $order->status_id = (int) $data['status_id'];
+        DB::transaction(function () use ($order, $data, $user, $oldStatusId, $newStatusId, $cancelledStatusId) {
+            $order->status_id = $newStatusId;
             $order->updated_at = now();
             $order->save();
 
             OrderStatusLog::create([
                 'order_id' => $order->order_id,
-                'status_id' => (int) $data['status_id'],
+                'status_id' => $newStatusId,
                 'changed_by' => $user->user_id,
                 'changed_at' => now(),
                 'note' => $data['note'] ?? null,
             ]);
+
+            if ($oldStatusId !== $cancelledStatusId && $newStatusId === $cancelledStatusId) {
+                // Stock restoration on cancellation
+                foreach ($order->items as $item) {
+                    \App\Models\Product::where('product_id', $item->product_id)
+                        ->increment('stock_qty', $item->quantity);
+                }
+            } elseif ($oldStatusId === $cancelledStatusId && $newStatusId !== $cancelledStatusId) {
+                // Stock deduction when un-cancelling
+                foreach ($order->items as $item) {
+                    \App\Models\Product::where('product_id', $item->product_id)
+                        ->decrement('stock_qty', $item->quantity);
+                }
+            }
         });
+
+        Mail::to($order->user->email, $order->user->full_name)->send(new OrderStatusUpdated($order, $data['note'] ?? null));
 
         return redirect()
             ->route('admin.order.show', $order->order_id)

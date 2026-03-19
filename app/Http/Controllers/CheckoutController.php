@@ -9,6 +9,8 @@ use App\Models\OrderItem;
 use App\Models\UserAddress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\OrderPlaced;
 
 class CheckoutController extends Controller
 {
@@ -151,6 +153,9 @@ class CheckoutController extends Controller
                         'quantity' => $cartItem->quantity,
                         'unit_price' => $cartItem->product->price
                     ]);
+
+                    \App\Models\Product::where('product_id', $cartItem->product_id)
+                        ->decrement('stock_qty', $cartItem->quantity);
                 }
 
                 CartItem::whereIn('cart_item_id', $cartItems->pluck('cart_item_id'))->delete();
@@ -161,6 +166,8 @@ class CheckoutController extends Controller
 
                 return $order;
             }, 3);
+
+            Mail::to($user->email, $user->full_name)->send(new OrderPlaced($order));
 
             return redirect()->route('customer.orders.show', $order->order_id)
                 ->with('success', 'Order placed successfully!');

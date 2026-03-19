@@ -335,5 +335,18 @@
       </div>
     </div>
   </div>
+
+  <div class="panel-card mt-3 border-danger" id="danger-zone" style="border-color:#f5c2c7;background:#fffafb">
+    <div class="panel-head text-danger" style="border-bottom-color:#f5c2c7;color:#842029"><i class="bi bi-exclamation-triangle-fill"></i>Danger Zone</div>
+    <div class="panel-body">
+      <h6 style="font-weight:700;margin-bottom:.2rem">Deactivate Account</h6>
+      <p style="font-size:.85rem;color:var(--muted);margin-bottom:1rem">Deactivating your account will immediately log you out and prevent further sign-ins. Your past orders will remain in our system for record-keeping, but your profile will be inaccessible until you contact support to reactivate.</p>
+      <form action="{{ route('customer.account.deactivate') }}" method="post" onsubmit="return confirm('Are you sure you want to deactivate your account? You will be immediately logged out and unable to access your profile.')">
+        @csrf
+        @method('DELETE')
+        <button type="submit" class="btn btn-outline-danger">Deactivate Account</button>
+      </form>
+    </div>
+  </div>
 </div>
 @endsection

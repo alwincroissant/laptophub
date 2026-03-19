@@ -55,4 +55,11 @@ class Product extends Model
     {
         return $this->hasMany(Review::class, 'product_id', 'product_id');
     }
+
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class, 'product_id', 'product_id')
+            ->orderBy('sort_order', 'asc')
+            ->orderBy('image_id', 'asc');
+    }
 }

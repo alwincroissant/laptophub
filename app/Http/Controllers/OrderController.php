@@ -8,6 +8,8 @@ use App\Models\OrderStatus;
 use App\Models\OrderStatusLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\OrderStatusUpdated;
 
 class OrderController extends Controller
 {
@@ -68,7 +70,7 @@ class OrderController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        $order->loadMissing('status');
+        $order->loadMissing(['status', 'items']);
 
         $currentStatus = strtolower((string) ($order->status->status_name ?? ''));
         if (!in_array($currentStatus, ['pending', 'processing'], true)) {
@@ -96,7 +98,14 @@ class OrderController extends Controller
                 'changed_at' => now(),
                 'note' => 'Cancelled by customer',
             ]);
+
+            foreach ($order->items as $item) {
+                \App\Models\Product::where('product_id', $item->product_id)
+                    ->increment('stock_qty', $item->quantity);
+            }
         });
+
+        Mail::to($user->email, $user->full_name)->send(new OrderStatusUpdated($order, 'Cancelled by customer'));
 
         return redirect()
             ->route('customer.orders.show', $order->order_id)

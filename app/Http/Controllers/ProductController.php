@@ -113,6 +113,7 @@ class ProductController extends Controller
             'stock_qty' => 'required|integer|min:0',
             'low_stock_threshold' => 'required|integer|min:0',
             'is_archived' => 'nullable|boolean',
+            'gallery_images.*' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
         $validated['is_archived'] = $request->boolean('is_archived');
@@ -122,8 +123,19 @@ class ProductController extends Controller
         }
 
         unset($validated['image']);
+        unset($validated['gallery_images']);
 
-        Product::create($validated);
+        $product = Product::create($validated);
+
+        if ($request->hasFile('gallery_images')) {
+            foreach ($request->file('gallery_images') as $index => $file) {
+                \App\Models\ProductImage::create([
+                    'product_id' => $product->product_id,
+                    'image_url' => Storage::url($file->store('products/gallery', 'public')),
+                    'sort_order' => $index,
+                ]);
+            }
+        }
 
         return redirect()
             ->route('admin.product.index')
@@ -195,6 +207,10 @@ class ProductController extends Controller
             'stock_qty' => 'required|integer|min:0',
             'low_stock_threshold' => 'required|integer|min:0',
             'is_archived' => 'nullable|boolean',
+            'gallery_images.*' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'delete_main_image' => 'nullable|boolean',
+            'delete_gallery_images' => 'nullable|array',
+            'delete_gallery_images.*' => 'integer|exists:product_images,image_id'
         ]);
 
         $validated['is_archived'] = $request->boolean('is_archived');
@@ -208,8 +224,43 @@ class ProductController extends Controller
         }
 
         unset($validated['image']);
+        unset($validated['gallery_images']);
+        unset($validated['delete_main_image']);
+        unset($validated['delete_gallery_images']);
+
+        if ($request->boolean('delete_main_image')) {
+            if ($product->image_url && str_starts_with($product->image_url, '/storage/')) {
+                Storage::disk('public')->delete(substr($product->image_url, strlen('/storage/')));
+            }
+            if (!array_key_exists('image_url', $validated)) {
+                $validated['image_url'] = null;
+            }
+        }
+
+        if ($request->has('delete_gallery_images')) {
+            $galleryIdsToDelete = $request->input('delete_gallery_images');
+            $imagesToDelete = \App\Models\ProductImage::whereIn('image_id', $galleryIdsToDelete)->get();
+            foreach ($imagesToDelete as $imgToDelete) {
+                if ($imgToDelete->image_url && str_starts_with($imgToDelete->image_url, '/storage/')) {
+                    Storage::disk('public')->delete(substr($imgToDelete->image_url, strlen('/storage/')));
+                }
+                $imgToDelete->delete();
+            }
+        }
 
         $product->update($validated);
+
+        if ($request->hasFile('gallery_images')) {
+            $lastSortOrder = $product->images()->max('sort_order') ?? -1;
+            foreach ($request->file('gallery_images') as $file) {
+                $lastSortOrder++;
+                \App\Models\ProductImage::create([
+                    'product_id' => $product->product_id,
+                    'image_url' => Storage::url($file->store('products/gallery', 'public')),
+                    'sort_order' => $lastSortOrder,
+                ]);
+            }
+        }
 
         return redirect()
             ->route('admin.product.index')

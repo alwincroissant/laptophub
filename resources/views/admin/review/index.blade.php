@@ -100,7 +100,14 @@
                                 {{ \Illuminate\Support\Str::limit((string) ($review->body ?: 'No review text provided.'), 120) }}
                             </div>
                         </td>
-                        <td>{{ $review->product->name ?? 'Unknown product' }}</td>
+                        <td>
+                            <div style="font-weight: 500;">{{ $review->product->name ?? 'Unknown product' }}</div>
+                            @if($review->product)
+                                <a href="{{ route('customer.shop.show', $review->product_id) }}" class="btn btn-sm btn-outline-primary mt-1" target="_blank" style="padding: 0.15rem 0.4rem; font-size: 0.72rem;">
+                                    <i class="bi bi-box-arrow-up-right me-1"></i>View Product
+                                </a>
+                            @endif
+                        </td>
                         <td>
                             <div>{{ $review->user->full_name ?? 'Unknown user' }}</div>
                             <div class="text-muted" style="font-size:.76rem">{{ $review->user->email ?? 'No email' }}</div>

@@ -180,11 +180,30 @@
       background: var(--cream);
     }
 
-    .qty-display {
-      width: 45px;
+    .qty-input {
+      width: 50px;
       text-align: center;
       font-size: .85rem;
       font-weight: 600;
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 3px;
+      height: 28px;
+      outline: none;
+    }
+    
+    .qty-input:focus {
+      border-color: var(--blue);
+    }
+
+    .qty-input::-webkit-outer-spin-button,
+    .qty-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .qty-input[type=number] {
+      -moz-appearance: textfield;
     }
 
     .remove-btn {
@@ -356,6 +375,20 @@
   </div>
 </div>
 
+<div class="container mt-4">
+  @if(session('success'))
+    <div class="alert alert-success">{{ session('success') }}</div>
+  @endif
+
+  @if(session('error'))
+    <div class="alert alert-danger">{{ session('error') }}</div>
+  @endif
+
+  @if($errors->any())
+    <div class="alert alert-danger mb-0">{{ $errors->first() }}</div>
+  @endif
+</div>
+
 <section class="py-5">
   <div class="container">
     @if($cartItems && $cartItems->count() > 0)
@@ -392,9 +425,10 @@
                     <form action="{{ route('customer.cart.update-qty') }}" method="post" style="display: flex; align-items: center; gap: .25rem">
                       @csrf
                       <input type="hidden" name="cart_item_id" value="{{ $item->cart_item_id }}">
-                      <button type="submit" name="action" value="increase" class="qty-btn" title="Increase quantity">+</button>
-                      <span class="qty-display">{{ $item->quantity }}</span>
+                      <button type="submit" name="action" value="set" style="display:none"></button>
                       <button type="submit" name="action" value="decrease" class="qty-btn" title="Decrease quantity">−</button>
+                      <input type="number" name="quantity" value="{{ $item->quantity }}" min="1" max="{{ $item->product->stock_qty }}" class="qty-input" onchange="this.form.submit()">
+                      <button type="submit" name="action" value="increase" class="qty-btn" title="Increase quantity">+</button>
                     </form>
                   </div>
                   <div class="cart-item-price">₱{{ number_format($item->product->price * $item->quantity, 2) }}</div>

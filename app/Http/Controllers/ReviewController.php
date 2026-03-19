@@ -86,4 +86,20 @@ class ReviewController extends Controller
             ->to(route('customer.shop.show', $productId) . '#reviews')
             ->with('success', 'Your review has been updated.');
     }
+
+    public function destroy(Request $request, int $productId, Review $review): RedirectResponse
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        if ((int) $review->user_id !== (int) $user->user_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $review->delete();
+
+        return redirect()
+            ->to(route('customer.shop.show', $productId) . '#reviews')
+            ->with('success', 'Your review has been successfully removed.');
+    }
 }

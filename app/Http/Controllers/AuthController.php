@@ -74,11 +74,15 @@ class AuthController extends Controller
             'is_active' => true,
         ]);
 
+        // Log the user in immediately
+        Auth::login($user);
+        $request->session()->regenerate();
+
         // Send email verification
         $user->sendEmailVerificationNotification();
 
-        // Redirect to login page with message to check email
-        return redirect()->route('index')->with('success', 'Account created! Please check your email to verify your account before logging in.');
+        // Redirect to the verification notice page
+        return redirect()->route('verification.notice')->with('success', 'Account created! Please check your email to verify your account.');
     }
 
     public function logout(Request $request): RedirectResponse

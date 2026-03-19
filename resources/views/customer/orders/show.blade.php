@@ -450,7 +450,12 @@
                           <span class="item-thumb-fallback"><i class="bi bi-image"></i></span>
                         @endif
                       </div>
-                      <span class="item-name">{{ $item->product->name }}</span>
+                      <div class="d-flex flex-column">
+                        <span class="item-name">{{ $item->product->name }}</span>
+                        <a href="{{ route('customer.shop.show', $item->product_id) }}" class="mt-1" style="font-size: 0.78rem; font-weight: 600; text-decoration: none;">
+                          <i class="bi bi-bag-check-fill me-1"></i>View Product
+                        </a>
+                      </div>
                     </div>
                   </td>
                   <td style="text-align: center">{{ $item->quantity }}</td>

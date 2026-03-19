@@ -88,6 +88,9 @@
                                         </button>
                                     </form>
                                 @else
+                                    <a href="{{ route('admin.supplier.show', $supplier) }}" class="btn btn-sm btn-outline-info" title="View Details" aria-label="View Details">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
                                     <a href="{{ route('admin.supplier.edit', $supplier) }}" class="btn btn-sm btn-outline-primary" title="Edit" aria-label="Edit">
                                         <i class="bi bi-pencil-square"></i>
                                     </a>

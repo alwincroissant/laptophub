@@ -230,4 +230,20 @@ class AccountController extends Controller
             abort(403, 'Unauthorized');
         }
     }
+
+    public function deactivate(Request $request)
+    {
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+
+        $user->is_active = false;
+        $user->save();
+
+        auth()->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/')->with('success', 'Your account has been successfully deactivated.');
+    }
 }

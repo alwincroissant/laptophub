@@ -108,7 +108,8 @@ class CartController extends Controller
     {
         $request->validate([
             'cart_item_id' => 'required|exists:cart_items,cart_item_id',
-            'action' => 'required|in:increase,decrease'
+            'action' => 'nullable|in:increase,decrease,set',
+            'quantity' => 'nullable|integer|min:1'
         ]);
 
         $cartItem = CartItem::with('product')->find($request->cart_item_id);
@@ -121,21 +122,22 @@ class CartController extends Controller
             return redirect()->back()->with('error', 'Product not found');
         }
 
+        $newQuantity = (int) $request->input('quantity', $cartItem->quantity);
+
         if ($request->action === 'increase') {
-            $newQuantity = (int) $cartItem->quantity + 1;
-
-            if ($newQuantity > (int) $cartItem->product->stock_qty) {
-                return redirect()->back()->with(
-                    'error',
-                    "Cannot set quantity. Only {$cartItem->product->stock_qty} unit(s) of {$cartItem->product->name} available."
-                );
-            }
-
-            $cartItem->quantity = $newQuantity;
-        } elseif ($request->action === 'decrease' && $cartItem->quantity > 1) {
-            $cartItem->quantity--;
+            $newQuantity++;
+        } elseif ($request->action === 'decrease' && $newQuantity > 1) {
+            $newQuantity--;
         }
 
+        if ($newQuantity > (int) $cartItem->product->stock_qty) {
+            return redirect()->back()->with(
+                'error',
+                "Cannot set quantity. Only {$cartItem->product->stock_qty} unit(s) of {$cartItem->product->name} available."
+            );
+        }
+
+        $cartItem->quantity = $newQuantity;
         $cartItem->save();
 
         return redirect()->route('customer.cart.index')->with('success', 'Cart updated');
