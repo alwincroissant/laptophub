@@ -122,29 +122,41 @@ class ShopController extends Controller
      */
     public function search(Request $request)
     {
-        $query = Product::query()
-            ->with(['brand', 'category'])
-            ->withCount([
-                'reviews as visible_reviews_count' => function ($reviewQuery) {
-                    $reviewQuery->where('is_visible', true);
-                },
-            ])
-            ->withAvg([
-                'reviews as visible_reviews_avg' => function ($reviewQuery) {
-                    $reviewQuery->where('is_visible', true);
-                },
-            ], 'rating');
+        $searchTerm = $request->get('q', '');
 
         if ($request->filled('q')) {
-            $searchTerm = $request->get('q');
-            $query->where(function ($q) use ($searchTerm) {
-                $q->where('name', 'like', "%{$searchTerm}%")
-                  ->orWhere('description', 'like', "%{$searchTerm}%");
+            $query = Product::search($searchTerm);
+            $query->query(function ($builder) {
+                $builder->with(['brand', 'category'])
+                    ->withCount([
+                        'reviews as visible_reviews_count' => function ($reviewQuery) {
+                            $reviewQuery->where('is_visible', true);
+                        },
+                    ])
+                    ->withAvg([
+                        'reviews as visible_reviews_avg' => function ($reviewQuery) {
+                            $reviewQuery->where('is_visible', true);
+                        },
+                    ], 'rating');
             });
+            $query->where('is_archived', 0);
+            $products = $query->paginate(12);
+        } else {
+            $query = Product::query()
+                ->with(['brand', 'category'])
+                ->withCount([
+                    'reviews as visible_reviews_count' => function ($reviewQuery) {
+                        $reviewQuery->where('is_visible', true);
+                    },
+                ])
+                ->withAvg([
+                    'reviews as visible_reviews_avg' => function ($reviewQuery) {
+                        $reviewQuery->where('is_visible', true);
+                    },
+                ], 'rating');
+            $query->where('is_archived', false);
+            $products = $query->paginate(12);
         }
-
-        $query->where('is_archived', false);
-        $products = $query->paginate(12);
         $brands = Brand::orderBy('name')->get();
         $categories = Category::orderBy('name')->get();
 

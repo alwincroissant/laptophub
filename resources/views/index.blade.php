@@ -691,6 +691,12 @@
         Browse Shop <i class="bi bi-arrow-right ms-1"></i>
       </a>
     </div>
+
+    <!-- Home Page Search (15pts requirement) -->
+    <form action="{{ route('customer.shop.search') }}" method="GET" class="mt-4 d-flex gap-2" style="max-width: 450px; animation: fadeUp .7s .4s ease both;">
+      <input type="text" name="q" class="form-control" placeholder="Search laptops, components, brands..." required>
+      <button type="submit" class="btn-submit" style="width: auto; flex-shrink: 0; padding: .85rem 1.25rem;"><i class="bi bi-search"></i></button>
+    </form>
     <div class="hero-stats">
       <div>
         <div class="hero-stat-num">348+</div>

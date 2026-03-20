@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Scout\Searchable;
 
 class Product extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, Searchable;
 
     protected $table = 'products';
     protected $primaryKey = 'product_id';
@@ -25,6 +26,20 @@ class Product extends Model
         'low_stock_threshold',
         'is_archived',
     ];
+
+    /**
+     * Get the indexable data array for the model.
+     *
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray()
+    {
+        return [
+            'product_id' => $this->product_id,
+            'name' => $this->name,
+            'description' => $this->description,
+        ];
+    }
 
     protected $casts = [
         'price' => 'decimal:2',

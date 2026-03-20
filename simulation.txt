@@ -308,3 +308,39 @@ REQUIREMENT 2: Bar Chart with Date Picker & Product Pie Chart (15pts)
 4. Hover over the Bar Chart columns or Pie Chart slices to see the 
    dynamic JavaScript tooltips rendering the precise data payload. 
 ======================================================================
+
+======================================================================
+MP8 SEARCH - SIMULATION GUIDE (15 PTS COMPLETE TIER)
+======================================================================
+
+Below are the step-by-step instructions on how to perfectly simulate and 
+test the MP8 Search rubric requirements in your application.
+
+REQUIREMENT 1: Search products on home page (no datatable search). use laravel scout with result pagination (15pts)
+----------------------------------------------------------------------
+1. Navigate to the homepage (/).
+2. You will see a dedicated Search Products form prominently displayed in the hero section.
+3. Type a keyword (e.g., "Gaming" or "Laptop") into the search bar and hit Enter.
+4. You will be seamlessly redirected to the shop search page, displaying results natively driven by Laravel Scout's database engine via the `Product::search()` method.
+5. Notice that the URL query captures your keyword (`?q=yourkeyword`).
+6. Scroll down to the bottom of the search results grid to observe that the results are successfully paginated, maintaining the strict 15-point criteria!
+======================================================================
+
+======================================================================
+MP8 TRANSACTION EMAILS & PDF RECEIPTS - SIMULATION GUIDE (30 PTS COMPLETE TIER)
+======================================================================
+
+Below are the step-by-step instructions on how to perfectly simulate and test the email and PDF receipt rubric requirements.
+
+REQUIREMENT 1: Transaction Email & Status Update Emails with PDF Attachments (30pts)
+----------------------------------------------------------------------
+1. Ensure your `.env` is configured for sending emails (e.g., using Mailtrap).
+2. Log in as a Customer and complete a checkout for any items in your cart.
+3. Check your email inbox. You will instantly receive an "Order Confirmation" email.
+4. Inside that email, observe the attached PDF file named `Receipt-Order-[ID].pdf`.
+5. Open the PDF to view the properly formatted receipt containing customer and order details.
+6. To test updates, log in as an Administrator and navigate to Orders (/admin/orders).
+7. Manage the specific order you just placed and update its status (e.g., to "Shipped").
+8. Check the customer's email inbox again. You will receive an "Order Status Updated" email.
+9. This update email will flawlessly attach an identical newly-generated `Receipt-Order-[ID].pdf` reflecting the new status!
+======================================================================
