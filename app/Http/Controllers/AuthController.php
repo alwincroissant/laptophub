@@ -53,6 +53,7 @@ class AuthController extends Controller
             'email' => ['required', 'email', 'max:150', 'unique:users,email'],
             'contact_number' => ['nullable', 'string', 'max:20'],
             'password' => ['required', 'string', 'min:8'],
+            'profile_image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
             'terms' => ['accepted'],
         ]);
 
@@ -65,18 +66,20 @@ class AuthController extends Controller
                 ->withInput($request->only('full_name', 'email', 'contact_number', 'terms'));
         }
 
+        $profileImageUrl = null;
+        if ($request->hasFile('profile_image')) {
+            $profileImageUrl = \Illuminate\Support\Facades\Storage::url($request->file('profile_image')->store('profile-images', 'public'));
+        }
+
         $user = User::create([
             'role_id' => $customerRoleId,
             'full_name' => $data['full_name'],
             'email' => $data['email'],
             'password_hash' => Hash::make($data['password']),
             'contact_number' => $data['contact_number'] ?? null,
+            'profile_image_url' => $profileImageUrl,
             'is_active' => true,
         ]);
-
-        // Log the user in immediately
-        Auth::login($user);
-        $request->session()->regenerate();
 
         // Send email verification
         $user->sendEmailVerificationNotification();

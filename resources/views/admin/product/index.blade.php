@@ -7,6 +7,7 @@
 
 @section('admin_styles')
     <link href="{{ asset('css/admin-product-index.css') }}" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css"/>
 @endsection
 
 @section('topbar_actions')
@@ -51,42 +52,25 @@
             </div>
         </div>
 
-        <div class="filter-card mb-3">
-            <form method="GET" action="{{ route('admin.product.index') }}" class="row g-2 align-items-end">
-                <div class="col-12 col-md-7">
-                    <label class="form-label">Search</label>
-                    <input
-                        type="text"
-                        name="search"
-                        value="{{ $search }}"
-                        class="form-control"
-                        placeholder="Product, brand, or category"
-                    >
-                </div>
-                <div class="col-12 col-md-3">
-                    <label class="form-label">Status</label>
-                    <select name="status" class="form-select">
-                        <option value="all" {{ $status === 'all' ? 'selected' : '' }}>All</option>
-                        <option value="active" {{ $status === 'active' ? 'selected' : '' }}>Active</option>
-                        <option value="archived" {{ $status === 'archived' ? 'selected' : '' }}>Archived</option>
-                        <option value="trashed" {{ $status === 'trashed' ? 'selected' : '' }}>Trashed</option>
-                        <option value="low-stock" {{ $status === 'low-stock' ? 'selected' : '' }}>Low Stock</option>
-                        <option value="out-of-stock" {{ $status === 'out-of-stock' ? 'selected' : '' }}>Out of Stock</option>
-                    </select>
-                </div>
-                <div class="col-12 col-md-2 d-flex gap-2">
-                    <button class="btn btn-dark w-100" type="submit">Apply</button>
-                </div>
+        <div class="filter-card mb-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h5 class="mb-0">Product Import</h5>
+                <small class="text-muted">Upload an Excel file to bulk import products</small>
+            </div>
+            <form method="POST" enctype="multipart/form-data" action="{{ route('admin.product.import') }}" class="d-flex gap-2">
+                @csrf
+                <input type="file" name="item_upload" class="form-control" accept=".xlsx,.xls,.csv" required>
+                <button type="submit" class="btn btn-info text-white text-nowrap"><i class="bi bi-file-earmark-excel me-1"></i>Import Excel File</button>
             </form>
         </div>
 
     <div class="table-card">
         <div class="card-header">
             <h5>Product List</h5>
-            <span class="text-muted" style="font-size:.78rem">{{ number_format($products->total()) }} total results</span>
+            <span class="text-muted" style="font-size:.78rem">{{ number_format($products->count()) }} total results</span>
         </div>
         <div class="table-responsive">
-            <table class="table mb-0">
+            <table class="table table-hover mb-0 align-middle" id="productsTable">
                 <thead>
                 <tr>
                     <th>ID</th>
@@ -173,9 +157,17 @@
             </table>
         </div>
 
-        @if ($products->hasPages())
-            <div class="pagination-wrap">
-                {{ $products->links('pagination::bootstrap-5') }}
-            </div>
-        @endif
+@push('scripts')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#productsTable').DataTable({
+                "pageLength": 12,
+                "order": [] 
+            });
+        });
+    </script>
+@endpush
 @endsection

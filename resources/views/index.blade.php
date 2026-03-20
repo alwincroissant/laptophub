@@ -734,9 +734,6 @@
 
         <form action="{{ route('login') }}" method="post">
           @csrf
-          @if ($errors->login->any())
-            <div class="auth-alert">{{ $errors->login->first() }}</div>
-          @endif
           <div class="mb-3">
             <label class="form-label" for="login-email">Email Address</label>
             <div class="input-icon">
@@ -784,11 +781,18 @@
         <div class="form-panel-title">Join LaptopHub.</div>
         <div class="form-panel-sub">Create your free account in seconds.</div>
 
-        <form action="{{ route('register') }}" method="post">
+        <form action="{{ route('register') }}" method="post" enctype="multipart/form-data">
           @csrf
-          @if ($errors->register->any())
-            <div class="auth-alert">{{ $errors->register->first() }}</div>
-          @endif
+          <div class="mb-3">
+            <label class="form-label" for="reg-photo">Profile Photo <span style="font-size:.65rem;color:var(--muted)">(optional)</span></label>
+            <div class="input-icon">
+              <input type="file" id="reg-photo" name="profile_image" class="form-control" accept="image/jpeg,image/png,image/webp" style="padding: .47rem 1rem;" />
+              <i class="bi bi-person-bounding-box"></i>
+            </div>
+            @error('profile_image', 'register')
+              <div class="field-error">{{ $message }}</div>
+            @enderror
+          </div>
           <div class="mb-3">
             <label class="form-label" for="reg-name">Full Name</label>
             <div class="input-icon">
@@ -802,7 +806,7 @@
           <div class="mb-3">
             <label class="form-label" for="reg-email">Email Address</label>
             <div class="input-icon">
-              <input type="email" id="reg-email" name="email" class="form-control" placeholder="you@example.com" value="{{ old('email') }}"/>
+              <input type="text" id="reg-email" name="email" class="form-control" placeholder="you@example.com" value="{{ old('email') }}"/>
               <i class="bi bi-envelope"></i>
             </div>
             @error('email', 'register')

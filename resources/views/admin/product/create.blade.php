@@ -16,15 +16,6 @@
 @endsection
 
 @section('admin_content')
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
 
         <div class="form-card">
             <div class="card-header">
@@ -36,64 +27,74 @@
 
                     <div class="col-md-6">
                         <label class="form-label" for="name">Product Name</label>
-                        <input id="name" name="name" type="text" class="form-control" value="{{ old('name') }}" required>
+                        <input id="name" name="name" type="text" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}">
+                        @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="col-md-3">
                         <label class="form-label" for="category_id">Category</label>
-                        <select id="category_id" name="category_id" class="form-select" required>
+                        <select id="category_id" name="category_id" class="form-select @error('category_id') is-invalid @enderror">
                             <option value="">Select Category</option>
                             @foreach ($categories as $category)
                                 <option value="{{ $category->category_id }}" @selected(old('category_id') == $category->category_id)>{{ $category->name }}</option>
                             @endforeach
                         </select>
+                        @error('category_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="col-md-3">
                         <label class="form-label" for="brand_id">Brand</label>
-                        <select id="brand_id" name="brand_id" class="form-select" required>
+                        <select id="brand_id" name="brand_id" class="form-select @error('brand_id') is-invalid @enderror">
                             <option value="">Select Brand</option>
                             @foreach ($brands as $brand)
                                 <option value="{{ $brand->brand_id }}" @selected(old('brand_id') == $brand->brand_id)>{{ $brand->name }}</option>
                             @endforeach
                         </select>
+                        @error('brand_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="col-md-4">
                         <label class="form-label" for="price">Price</label>
-                        <input id="price" name="price" type="number" step="0.01" min="0" class="form-control" value="{{ old('price') }}" required>
+                        <input id="price" name="price" type="number" step="0.01" class="form-control @error('price') is-invalid @enderror" value="{{ old('price') }}">
+                        @error('price')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="col-md-4">
                         <label class="form-label" for="stock_qty">Stock Quantity</label>
-                        <input id="stock_qty" name="stock_qty" type="number" min="0" class="form-control" value="{{ old('stock_qty', 0) }}" required>
+                        <input id="stock_qty" name="stock_qty" type="number" class="form-control @error('stock_qty') is-invalid @enderror" value="{{ old('stock_qty', 0) }}">
+                        @error('stock_qty')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="col-md-4">
                         <label class="form-label" for="low_stock_threshold">Low Stock Threshold</label>
-                        <input id="low_stock_threshold" name="low_stock_threshold" type="number" min="0" class="form-control" value="{{ old('low_stock_threshold', 5) }}" required>
+                        <input id="low_stock_threshold" name="low_stock_threshold" type="number" class="form-control @error('low_stock_threshold') is-invalid @enderror" value="{{ old('low_stock_threshold', 5) }}">
+                        @error('low_stock_threshold')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="col-12">
                         <label class="form-label" for="image">Main Product Image</label>
-                        <input id="image" name="image" type="file" class="form-control" accept="image/png,image/jpeg,image/webp">
+                        <input id="image" name="image" type="file" class="form-control @error('image') is-invalid @enderror" accept="image/png,image/jpeg,image/webp">
+                        @error('image')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         <small class="text-muted d-block">Optional. Primary image used in catalog. JPG, PNG, or WEBP up to 2MB.</small>
                     </div>
 
                     <div class="col-12">
                         <label class="form-label" for="gallery_images">Additional Gallery Images</label>
-                        <input id="gallery_images" name="gallery_images[]" type="file" multiple class="form-control" accept="image/png,image/jpeg,image/webp">
+                        <input id="gallery_images" name="gallery_images[]" type="file" multiple class="form-control @error('gallery_images.*') is-invalid @enderror" accept="image/png,image/jpeg,image/webp">
+                        @error('gallery_images.*')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         <small class="text-muted d-block">Optional. Select multiple files for the interactive gallery on the product page.</small>
                     </div>
 
                     <div class="col-12">
                         <label class="form-label" for="description">Description</label>
-                        <textarea id="description" name="description" class="form-control" rows="3">{{ old('description') }}</textarea>
+                        <textarea id="description" name="description" class="form-control @error('description') is-invalid @enderror" rows="3">{{ old('description') }}</textarea>
+                        @error('description')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="col-12">
                         <label class="form-label" for="compatibility">Compatibility</label>
-                        <textarea id="compatibility" name="compatibility" class="form-control" rows="2">{{ old('compatibility') }}</textarea>
+                        <textarea id="compatibility" name="compatibility" class="form-control @error('compatibility') is-invalid @enderror" rows="2">{{ old('compatibility') }}</textarea>
+                        @error('compatibility')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="col-12">

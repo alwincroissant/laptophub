@@ -170,6 +170,7 @@ Route::middleware(['auth.admin', 'active', 'admin'])->prefix('admin')->name('adm
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('product.destroy');
     Route::patch('/products/{productId}/restore', [ProductController::class, 'restore'])->name('product.restore');
     Route::delete('/products/{productId}/force', [ProductController::class, 'forceDestroy'])->name('product.force-destroy');
+    Route::post('/products/import', [ProductController::class, 'import'])->name('product.import');
 
     Route::get('/categories', [CategoryController::class, 'index'])->name('category.index');
     Route::get('/categories/create', [CategoryController::class, 'create'])->name('category.create');
@@ -231,6 +232,7 @@ Route::middleware(['auth.admin', 'active', 'admin'])->prefix('admin')->name('adm
         Route::delete('/reviews/{review}', [AdminReviewController::class, 'destroy'])->name('review.destroy');
 
         // FR1.9 Legacy Standard Reports Module Node
+        Route::get('/reports/charts', [\App\Http\Controllers\ReportController::class, 'charts'])->name('reports.charts');
         Route::get('/reports/sales', [\App\Http\Controllers\ReportController::class, 'sales'])->name('reports.sales');
         Route::get('/reports/inventory', [\App\Http\Controllers\ReportController::class, 'inventory'])->name('reports.inventory');
         Route::get('/reports/orders', [\App\Http\Controllers\ReportController::class, 'orders'])->name('reports.orders');

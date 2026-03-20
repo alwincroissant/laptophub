@@ -22,28 +22,21 @@ class AccountController extends Controller
         /** @var \App\Models\User $user */
         $user = auth()->user();
 
-        $wantsDetailsUpdate = $request->hasAny(['full_name', 'email', 'contact_number']);
-
         $rules = [
             'profile_image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
-        ];
-
-        if ($wantsDetailsUpdate) {
-            $rules['full_name'] = ['required', 'string', 'max:100'];
-            $rules['email'] = [
+            'full_name' => ['required', 'string', 'max:100'],
+            'email' => [
                 'required',
                 'email',
                 'max:150',
                 Rule::unique('users', 'email')->ignore($user->user_id, 'user_id'),
-            ];
-            $rules['contact_number'] = ['nullable', 'string', 'max:20'];
-        }
+            ],
+            'contact_number' => ['nullable', 'string', 'max:20'],
+            'current_password' => ['required_with:new_password', 'nullable', 'string'],
+            'new_password' => ['nullable', 'string', 'min:8', 'confirmed'],
+        ];
 
         $data = $request->validate($rules);
-
-        if (! $wantsDetailsUpdate && ! $request->hasFile('profile_image')) {
-            return redirect()->route('customer.account.profile')->with('error', 'Please choose an image to upload.');
-        }
 
         if ($request->hasFile('profile_image')) {
             if ($user->profile_image_url && Str::startsWith($user->profile_image_url, '/storage/')) {
@@ -60,10 +53,19 @@ class AccountController extends Controller
 
         unset($data['profile_image']);
 
+        // Only update password if provided
+        if (!empty($data['new_password'])) {
+            if (!Hash::check($data['current_password'] ?? '', $user->password_hash)) {
+                return redirect()->back()->withErrors(['current_password' => 'Current password is incorrect. Profile update failed.'])->withInput();
+            }
+            $data['password_hash'] = Hash::make($data['new_password']);
+        }
+        unset($data['new_password'], $data['current_password']);
+
         $user->fill($data);
         $user->save();
 
-        return redirect()->route('customer.account.profile')->with('success', 'Profile updated successfully.');
+        return redirect()->route('customer.account.profile')->with('success', 'Profile saved successfully.');
     }
 
     public function password()
@@ -82,7 +84,7 @@ class AccountController extends Controller
         ]);
 
         if (!Hash::check($data['current_password'], $user->password_hash)) {
-            return redirect()->back()->with('error', 'Current password is incorrect.');
+            return redirect()->back()->withErrors(['current_password' => 'Current password is incorrect.'])->withInput();
         }
 
         $user->password_hash = Hash::make($data['new_password']);

@@ -38,7 +38,7 @@ class UserController extends Controller
             $query->where('role_id', $roleId);
         }
 
-        $users = $query->orderBy('full_name')->paginate(12)->withQueryString();
+        $users = $query->orderBy('full_name')->get();
 
         return view('admin.user.index', [
             'users' => $users,

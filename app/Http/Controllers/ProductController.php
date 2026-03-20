@@ -7,6 +7,8 @@ use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\ProductImport;
 
 class ProductController extends Controller
 {
@@ -15,9 +17,6 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $search = trim((string) $request->input('search', ''));
-        $status = (string) $request->input('status', 'all');
-
         $metrics = [
             'total' => Product::count(),
             'active' => Product::where('is_archived', 0)->count(),
@@ -29,7 +28,7 @@ class ProductController extends Controller
                 ->count(),
         ];
 
-        $productsQuery = Product::query()
+        $products = Product::withTrashed()
             ->leftJoin('categories', 'products.category_id', '=', 'categories.category_id')
             ->leftJoin('brands', 'products.brand_id', '=', 'brands.brand_id')
             ->select([
@@ -44,42 +43,13 @@ class ProductController extends Controller
                 'products.deleted_at',
                 'categories.name as category_name',
                 'brands.name as brand_name',
-            ]);
-
-        if ($status === 'trashed') {
-            $productsQuery->onlyTrashed();
-        }
-
-        if ($search !== '') {
-            $productsQuery->where(function ($query) use ($search) {
-                $query->where('products.name', 'like', "%{$search}%")
-                    ->orWhere('categories.name', 'like', "%{$search}%")
-                    ->orWhere('brands.name', 'like', "%{$search}%");
-            });
-        }
-
-        if ($status === 'active') {
-            $productsQuery->where('products.is_archived', 0);
-        } elseif ($status === 'archived') {
-            $productsQuery->where('products.is_archived', 1);
-        } elseif ($status === 'low-stock') {
-            $productsQuery->where('products.is_archived', 0)
-                ->whereColumn('products.stock_qty', '<=', 'products.low_stock_threshold');
-        } elseif ($status === 'out-of-stock') {
-            $productsQuery->where('products.is_archived', 0)
-                ->where('products.stock_qty', 0);
-        }
-
-        $products = $productsQuery
+            ])
             ->orderByDesc('products.updated_at')
-            ->paginate(12)
-            ->withQueryString();
+            ->get();
 
         return view('admin.product.index', [
             'products' => $products,
             'metrics' => $metrics,
-            'search' => $search,
-            'status' => $status,
         ]);
     }
 
@@ -301,5 +271,19 @@ class ProductController extends Controller
         return redirect()
             ->route('admin.product.index')
             ->with('success', 'Product deleted permanently.');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'item_upload' => 'required|mimes:xlsx,xls,csv'
+        ]);
+
+        Excel::import(
+            new ProductImport,
+            $request->file('item_upload')
+        );
+
+        return redirect()->back()->with('success', 'Excel file imported successfully.');
     }
 }

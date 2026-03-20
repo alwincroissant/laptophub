@@ -58,6 +58,7 @@
         @if(strtolower($adminUser->role->role_name ?? '') === 'admin')
     <div class="nav-section">
         <div class="nav-section-label">Reports</div>
+        <a href="{{ route('admin.reports.charts') }}" class="nav-link {{ (($activeNav ?? '') === 'reports.charts') ? 'active' : '' }}"><i class="bi bi-bar-chart"></i> Analytics Charts</a>
         <a href="{{ route('admin.reports.sales') }}" class="nav-link {{ (($activeNav ?? '') === 'sales_report') ? 'active' : '' }}"><i class="bi bi-wallet2"></i> Sales Report</a>
         <a href="{{ route('admin.reports.inventory') }}" class="nav-link {{ (($activeNav ?? '') === 'inventory_report') ? 'active' : '' }}"><i class="bi bi-boxes"></i> Inventory Stock</a>
         <a href="{{ route('admin.reports.expenses') }}" class="nav-link {{ (($activeNav ?? '') === 'expenses') ? 'active' : '' }}"><i class="bi bi-graph-up-arrow"></i> Capital Expenses</a>

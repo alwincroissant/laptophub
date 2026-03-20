@@ -7,6 +7,7 @@
 
 @section('admin_styles')
     <link href="{{ asset('css/admin-product-index.css') }}" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
 @endsection
 
 @section('topbar_actions')
@@ -22,42 +23,15 @@
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
-    <div class="filter-card mb-3">
-        <form method="GET" action="{{ route('admin.user.index') }}" class="row g-2 align-items-end">
-            <div class="col-12 col-md-5">
-                <label class="form-label">Search</label>
-                <input type="text" name="search" value="{{ $search }}" class="form-control" placeholder="Name, email, or contact number">
-            </div>
-            <div class="col-12 col-md-3">
-                <label class="form-label">Status</label>
-                <select name="status" class="form-select">
-                    <option value="all" {{ $status === 'all' ? 'selected' : '' }}>All</option>
-                    <option value="active" {{ $status === 'active' ? 'selected' : '' }}>Active</option>
-                    <option value="inactive" {{ $status === 'inactive' ? 'selected' : '' }}>Inactive</option>
-                </select>
-            </div>
-            <div class="col-12 col-md-2">
-                <label class="form-label">Role</label>
-                <select name="role_id" class="form-select">
-                    <option value="0">All Roles</option>
-                    @foreach($roles as $role)
-                        <option value="{{ $role->role_id }}" {{ $roleId === (int) $role->role_id ? 'selected' : '' }}>{{ $role->role_name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-12 col-md-2 d-flex gap-2">
-                <button class="btn btn-dark w-100" type="submit">Apply</button>
-            </div>
-        </form>
-    </div>
+
 
     <div class="table-card">
         <div class="card-header">
             <h5>User List</h5>
-            <span class="text-muted" style="font-size:.78rem">{{ number_format($users->total()) }} total results</span>
+            <span class="text-muted" style="font-size:.78rem">{{ number_format($users->count()) }} total results</span>
         </div>
         <div class="table-responsive">
-            <table class="table mb-0">
+            <table class="table mb-0 table-hover align-middle" id="usersTable">
                 <thead>
                 <tr>
                     <th>ID</th>
@@ -117,11 +91,49 @@
                 </tbody>
             </table>
         </div>
-
-        @if ($users->hasPages())
-            <div class="pagination-wrap">
-                {{ $users->links() }}
-            </div>
-        @endif
     </div>
 @endsection
+
+@push('scripts')
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+<script>
+    $(document).ready(function() {
+        var table = $('#usersTable').DataTable({
+            "pageLength": 10,
+            "order": [],
+            "language": {
+                "search": "",
+                "searchPlaceholder": "Search users..."
+            }
+        });
+
+        // Create custom dropdown filters
+        var statusFilter = $('<select class="form-select form-select-sm ms-2 d-inline-block w-auto"><option value="">All Statuses</option><option value="Active">Active</option><option value="Inactive">Inactive</option></select>');
+        var roleFilter = $('<select class="form-select form-select-sm ms-2 d-inline-block w-auto"><option value="">All Roles</option>' + 
+            @foreach($roles as $role)
+                '<option value="{{ $role->role_name }}">{{ $role->role_name }}</option>' +
+            @endforeach
+            '</select>');
+
+        // Append them next to the search input
+        $('.dataTables_filter').addClass('d-flex justify-content-end align-items-center mb-3');
+        $('.dataTables_filter label').addClass('mb-0 me-2');
+        $('.dataTables_filter').append(roleFilter).append(statusFilter);
+
+        // Bind events for exact-match column filtering
+        statusFilter.on('change', function() {
+            var val = $.fn.dataTable.util.escapeRegex($(this).val());
+            // Column 5 is Status
+            table.column(5).search(val ? '^' + val + '$' : '', true, false).draw();
+        });
+
+        roleFilter.on('change', function() {
+            var val = $.fn.dataTable.util.escapeRegex($(this).val());
+            // Column 3 is Role
+            table.column(3).search(val ? '^' + val + '$' : '', true, false).draw();
+        });
+    });
+</script>
+@endpush

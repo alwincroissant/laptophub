@@ -41,44 +41,15 @@
         </div>
     </div>
 
-    <div class="filter-card mb-3">
-        <form method="GET" action="{{ route('admin.review.index') }}" class="row g-2 align-items-end">
-            <div class="col-12 col-md-6">
-                <label class="form-label">Search</label>
-                <input type="text" name="search" value="{{ $search }}" class="form-control" placeholder="Product, customer, order #, title, or review text">
-            </div>
-            <div class="col-6 col-md-3">
-                <label class="form-label">Visibility</label>
-                <select name="visibility" class="form-select">
-                    <option value="all" {{ $visibility === 'all' ? 'selected' : '' }}>All</option>
-                    <option value="shown" {{ $visibility === 'shown' ? 'selected' : '' }}>Visible</option>
-                    <option value="hidden" {{ $visibility === 'hidden' ? 'selected' : '' }}>Hidden</option>
-                </select>
-            </div>
-            <div class="col-6 col-md-2">
-                <label class="form-label">Rating</label>
-                <select name="rating" class="form-select">
-                    <option value="0" {{ (int) $rating === 0 ? 'selected' : '' }}>All</option>
-                    <option value="5" {{ (int) $rating === 5 ? 'selected' : '' }}>5 stars</option>
-                    <option value="4" {{ (int) $rating === 4 ? 'selected' : '' }}>4 stars</option>
-                    <option value="3" {{ (int) $rating === 3 ? 'selected' : '' }}>3 stars</option>
-                    <option value="2" {{ (int) $rating === 2 ? 'selected' : '' }}>2 stars</option>
-                    <option value="1" {{ (int) $rating === 1 ? 'selected' : '' }}>1 star</option>
-                </select>
-            </div>
-            <div class="col-12 col-md-1 d-flex">
-                <button class="btn btn-dark w-100" type="submit">Go</button>
-            </div>
-        </form>
-    </div>
+
 
     <div class="table-card">
         <div class="card-header">
             <h5>Review List</h5>
-            <span class="text-muted" style="font-size:.78rem">{{ number_format($reviews->total()) }} total results</span>
+            <span class="text-muted" style="font-size:.78rem">{{ number_format($reviews->count()) }} total results</span>
         </div>
         <div class="table-responsive">
-            <table class="table mb-0">
+            <table class="table mb-0" id="reviewsTable">
                 <thead>
                 <tr>
                     <th>Review</th>
@@ -162,10 +133,75 @@
             </table>
         </div>
 
-        @if ($reviews->hasPages())
-            <div class="p-3 border-top">
-                {{ $reviews->links('pagination::bootstrap-5') }}
-            </div>
-        @endif
+
     </div>
 @endsection
+
+@push('styles')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+<style>
+    /* Styling for the custom DataTables wrapper */
+    .dataTables_wrapper .row {
+        align-items: center;
+        margin-bottom: 0.5rem;
+        padding: 0 1rem;
+    }
+    .dataTables_wrapper .dataTables_paginate {
+        padding: 0.5rem 1rem;
+    }
+    .dataTables_wrapper .dataTables_info {
+        padding: 1rem;
+    }
+    /* Ensure action icons align properly */
+    .table td { vertical-align: middle; }
+    
+    .status-badge {
+        font-size: 0.72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        letter-spacing: 0.5px;
+    }
+    .badge-delivered { background-color: #d1fae5; color: #065f46; border: 1px solid #10b981; }
+    .badge-cancelled { background-color: #fce7f3; color: #9d174d; border: 1px solid #ec4899; }
+</style>
+@endpush
+
+@push('scripts')
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+<script>
+    $(document).ready(function() {
+        var table = $('#reviewsTable').DataTable({
+            "pageLength": 10,
+            "order": [], // Default no predefined DB sort override
+            "language": {
+                "search": "",
+                "searchPlaceholder": "Search reviews..."
+            }
+        });
+
+        // Add custom filters right into the DataTables search container
+        var visibilityFilter = $('<select class="form-select form-select-sm ms-2 d-inline-block w-auto"><option value="">All Visibilities</option><option value="Visible">Visible</option><option value="Hidden">Hidden</option></select>');
+        var ratingFilter = $('<select class="form-select form-select-sm ms-2 d-inline-block w-auto"><option value="">All Ratings</option><option value="★★★★★">5 Stars</option><option value="★★★★☆">4 Stars</option><option value="★★★☆☆">3 Stars</option><option value="★★☆☆☆">2 Stars</option><option value="★☆☆☆☆">1 Star</option></select>');
+
+        $('.dataTables_filter').addClass('d-flex justify-content-end align-items-center mb-3');
+        $('.dataTables_filter label').addClass('mb-0 me-2');
+        $('.dataTables_filter').append(ratingFilter).append(visibilityFilter);
+
+        visibilityFilter.on('change', function() {
+            var val = $.fn.dataTable.util.escapeRegex($(this).val());
+            // Visibility is column index 5
+            table.column(5).search(val ? '^' + val + '$' : '', true, false).draw();
+        });
+
+        ratingFilter.on('change', function() {
+            var val = $.fn.dataTable.util.escapeRegex($(this).val());
+            // Exact string match for stars in Column 4
+            table.column(4).search(val ? '^' + val + '$' : '', true, false).draw();
+        });
+    });
+</script>
+@endpush

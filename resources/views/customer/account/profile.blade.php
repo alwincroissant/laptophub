@@ -261,9 +261,9 @@
     <div class="alert alert-danger">{{ $errors->first() }}</div>
   @endif
 
-  <div class="profile-photo-card">
-    <form action="{{ route('customer.account.profile.update') }}" method="post" enctype="multipart/form-data" class="profile-picture-form">
-      @csrf
+  <form action="{{ route('customer.account.profile.update') }}" method="post" enctype="multipart/form-data">
+    @csrf
+    <div class="profile-photo-card">
       <div class="profile-picture-wrap">
         <div class="profile-picture-left">
           <div class="profile-picture-preview" aria-hidden="true">
@@ -280,61 +280,61 @@
           </div>
         </div>
         <div class="profile-picture-actions">
-          <input type="file" name="profile_image" class="form-control profile-file-input" accept="image/jpeg,image/png,image/webp" required>
-          <button type="submit" class="btn btn-danger">Upload Photo</button>
+          <input type="file" name="profile_image" class="form-control profile-file-input @error('profile_image') is-invalid @enderror" accept="image/jpeg,image/png,image/webp">
+          @error('profile_image')<div class="invalid-feedback" style="display:block;">{{ $message }}</div>@enderror
         </div>
       </div>
-    </form>
-  </div>
-
-  <div class="account-grid">
-    <div class="panel-card" id="profile">
-      <div class="panel-head"><i class="bi bi-person-lines-fill"></i>Profile Details</div>
-      <div class="panel-body">
-        <form action="{{ route('customer.account.profile.update') }}" method="post">
-          @csrf
-          <div class="mb-3">
-            <label class="form-label">Full Name</label>
-            <input type="text" name="full_name" class="form-control" value="{{ old('full_name', auth()->user()->full_name) }}" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input type="email" name="email" class="form-control" value="{{ old('email', auth()->user()->email) }}" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Contact Number</label>
-            <input type="text" name="contact_number" class="form-control" value="{{ old('contact_number', auth()->user()->contact_number) }}">
-          </div>
-          <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-danger">Save Profile</button>
-            <a href="{{ route('customer.shop.index') }}" class="btn btn-outline-secondary">Back</a>
-          </div>
-        </form>
-      </div>
     </div>
 
-    <div class="panel-card" id="security">
-      <div class="panel-head"><i class="bi bi-shield-lock-fill"></i>Security</div>
-      <div class="panel-body">
-        <form action="{{ route('customer.account.password.update') }}" method="post">
-          @csrf
-          <div class="mb-3">
-            <label class="form-label">Current Password</label>
-            <input type="password" name="current_password" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">New Password</label>
-            <input type="password" name="new_password" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Confirm New Password</label>
-            <input type="password" name="new_password_confirmation" class="form-control" required>
-          </div>
-          <button type="submit" class="btn btn-danger">Update Password</button>
-        </form>
+    <div class="account-grid">
+      <div class="panel-card" id="profile">
+        <div class="panel-head"><i class="bi bi-person-lines-fill"></i>Profile Details</div>
+        <div class="panel-body">
+            <div class="mb-3">
+              <label class="form-label">Full Name</label>
+              <input type="text" name="full_name" class="form-control @error('full_name') is-invalid @enderror" value="{{ old('full_name', auth()->user()->full_name) }}" required>
+              @error('full_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', auth()->user()->email) }}" required>
+              @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Contact Number</label>
+              <input type="text" name="contact_number" class="form-control @error('contact_number') is-invalid @enderror" value="{{ old('contact_number', auth()->user()->contact_number) }}">
+              @error('contact_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+        </div>
+      </div>
+
+      <div class="panel-card" id="security">
+        <div class="panel-head"><i class="bi bi-shield-lock-fill"></i>Security</div>
+        <div class="panel-body">
+            <div class="mb-3">
+              <label class="form-label">Current Password</label>
+              <input type="password" name="current_password" class="form-control @error('current_password') is-invalid @enderror">
+              @error('current_password')<div class="invalid-feedback">{{ $message }}</div>@enderror
+              <div class="form-text text-muted" style="font-size: .75rem;">Required only when updating password</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">New Password</label>
+              <input type="password" name="new_password" class="form-control @error('new_password') is-invalid @enderror">
+              @error('new_password')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Confirm New Password</label>
+              <input type="password" name="new_password_confirmation" class="form-control">
+            </div>
+        </div>
       </div>
     </div>
-  </div>
+    
+    <div class="mt-4 d-flex justify-content-end gap-2">
+      <a href="{{ route('customer.shop.index') }}" class="btn btn-outline-secondary">Back</a>
+      <button type="submit" class="btn btn-danger">Save Profile</button>
+    </div>
+  </form>
 
   <div class="panel-card mt-3 border-danger" id="danger-zone" style="border-color:#f5c2c7;background:#fffafb">
     <div class="panel-head text-danger" style="border-bottom-color:#f5c2c7;color:#842029"><i class="bi bi-exclamation-triangle-fill"></i>Danger Zone</div>

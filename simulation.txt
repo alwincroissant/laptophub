@@ -1,0 +1,310 @@
+======================================================================
+MP1 PRODUCT/SERVICE - SIMULATION GUIDE (20 PTS COMPLETE TIER)
+======================================================================
+
+Below are the step-by-step instructions on how to perfectly simulate and 
+test all four rubric requirements in your application.
+
+REQUIREMENT 1: Product/Service CRUD datatable (8pts)
+----------------------------------------------------------------------
+1. Navigate to your admin dashboard and click on "Products" in the sidebar 
+   (/admin/products).
+2. To test CREATE: Click the "Add Product" button. Fill in a test name like 
+   "Simulation Laptop", set a price, stock quantity, category, and brand. 
+   Click "Save".
+3. To test READ & DATATABLE: Go back to the product list. Notice that the 
+   table has a search bar at the top right, and pagination at the bottom right. 
+   Search for "Simulation Laptop". The table will instantly filter the list 
+   without reloading the page.
+4. To test UPDATE: Click the blue Edit icon (pencil) next to your new laptop. 
+   Change its price. Save, and check the table again to verify the update.
+5. To test DELETE: Click the yellow Soft Delete icon (archive box). Confirm it.
+   The product will disappear from the active datatable list.
+
+
+REQUIREMENT 2: Product/Service CRUDRestore datatable upload a single photo (10pts)
+----------------------------------------------------------------------
+1. First, test Restore: In the Datatables search box on /admin/products, 
+   type the word "Trashed". 
+2. The table will instantly show your soft-deleted "Simulation Laptop". 
+3. Click the green Recover icon (circular arrow) next to it. 
+4. The product badge will change back to "Active", proving CRUDRestore works!
+5. To test single photo upload: Click the Edit icon on the laptop again. 
+   Under "Image" (the main single image input), select a picture from your 
+   computer and click Save. 
+6. Return to the datatable. Look at the "Image" column for your laptop; 
+   you will now see the thumbnail you just uploaded.
+
+
+REQUIREMENT 3: Product/Service CRUDRestore datatable upload/view multiple photos (15pts)
+----------------------------------------------------------------------
+1. Edit the "Simulation Laptop" product again.
+2. Scroll down specifically to the "Gallery Images" file input. 
+3. Because this relies on multiple uploads, select 3 or 4 different pictures 
+   at the same time from your computer folder, and click Save.
+4. Back on the Datatable, click the white View icon (eye) next to your product.
+5. You will be taken to the Product Information page. 
+6. On the left side, you will see a fully interactive CSS image gallery that 
+   lets you click through all the multiple photos you just uploaded.
+
+
+REQUIREMENT 4: Product/Service CRUDRestore datatable upload/view multiple photos, import products on excel worksheet (20pts)
+----------------------------------------------------------------------
+1. Open Excel or Google Sheets on your computer to create a test file.
+2. In Row 1, type the EXACT database column headers:
+   A1: name
+   B1: price
+   C1: stock_qty
+   D1: image_url
+   E1: category_id
+   F1: brand_id
+3. In Row 2, fill in some fake test data:
+   A2: Excel Imported Laptop
+   B2: 45000
+   C2: 25
+   D2: https://example.com/laptop.jpg  (Or a local path)
+   E2: 1
+   F2: 1
+4. Save the file to your computer as an Excel Workbook (.xlsx).
+5. Head back to your datatable at /admin/products.
+6. At the top of the page under "Product Import", click "Choose File" and 
+   find the .xlsx file you just saved.
+7. Click the blue "Import Excel File" button.
+8. The page will reload. Scroll down to your datatable, and you will instantly 
+   see "Excel Imported Laptop" fully populated into your database!
+
+======================================================================
+MP2 USER CRUD - SIMULATION GUIDE (20 PTS COMPLETE TIER)
+======================================================================
+
+Below are the step-by-step instructions on how to perfectly simulate and 
+test all four rubric requirements in your application for the "User CRUD" module.
+
+REQUIREMENT 1: User Registration with upload photo (5pts)
+----------------------------------------------------------------------
+1. Make sure you are completely logged out of the application.
+2. Go to the homepage (/) and click the "Register" button in the top right.
+3. Fill in your Name, Email, Contact Number, and Password.
+4. Focus on the new "Profile Photo" field. Click it and select an image from your computer to upload.
+5. Check the Terms agreement and click "Create Account".
+6. The system will create your user, save the uploaded image securely, and assign you a Customer role.
+
+REQUIREMENT 2: User update profile and upload photo. (5pts)
+----------------------------------------------------------------------
+1. If you just registered, you can click your account dropdown and go to "My Profile". 
+2. OR, if you are logged in as an Admin: Go to the Admin dashboard, click on your profile name at the top right, and select "Profile".
+3. In the "Account Information" section, you will see your current Profile Photo thumbnail. 
+4. Click the "Choose File" input next to the thumbnail, pick a new image, and click "Save Profile". 
+5. The webpage will reload and instantly display your newly updated photo.
+
+REQUIREMENT 3: list users on a datatable. (5pts)
+----------------------------------------------------------------------
+1. Log in to your Admin account.
+2. Go to the "Users" tab in the admin sidebar (/admin/user).
+3. The user list is now fully powered by jQuery DataTables!
+4. Type any name or email in the DataTables "Search" box (top right of the table) to see instant client-side filtering. 
+5. Change the "Show N entries" dropdown (top left of the table) to test dynamic pagination.
+
+REQUIREMENT 4: admin can set the status of a user to active/inactive. update role of user. (5pts)
+----------------------------------------------------------------------
+1. While still on the Admin User List (/admin/user), find any normal customer account.
+2. To test Status (Active/Inactive): Click the yellow "Deactivate" button (user-minus icon) on their row. 
+3. The database will set is_active to false. Their status badge will instantly change to "Inactive", and they will be blocked from logging in. You can click the green "Activate" button to restore them.
+4. To test Role Update: Click the blue "Edit" button (pencil icon) on any user.
+5. In the User Edit form, locate the "Role" dropdown. Change it from "Customer" to "Admin" (or vice versa) and hit Save.
+6. The user's permissions and access level have now been successfully upgraded/downgraded!
+======================================================================
+
+======================================================================
+MP3 AUTHENTICATION & SECURITY - SIMULATION GUIDE (20 PTS COMPLETE TIER)
+======================================================================
+
+Below are the step-by-step instructions on how to perfectly simulate and 
+test all four rubric requirements in your application for the "Authentication" module.
+
+REQUIREMENT 1: Authentication & Email Verification After Registration
+----------------------------------------------------------------------
+1. Completely log out of any active account.
+2. Go to the "Register" page and create a brand new test account with a 
+   real or Mailtrap-accessible email address.
+3. Upon clicking Register, you will NOT be logged in immediately. Instead, 
+   you will be redirected to the "Verify Email" notice page.
+4. Check your email inbox. You will see a securely generated Laravel email 
+   verification link.
+5. Click the "Verify Email Address" button in the email.
+6. The system will successfully verify your email and redirect you to the 
+   homepage.
+
+REQUIREMENT 2: Only Verified Users Can Login
+----------------------------------------------------------------------
+1. Log out again. 
+2. Register another brand new account, but this time, DO NOT verify the email.
+3. Try to log in with the new account's credentials.
+4. The system will reject the login and display an error message stating: 
+   "Please verify your email address before logging in."
+5. Only after clicking the email verification link will you be allowed to log in!
+
+REQUIREMENT 3: Admin Routes Protected From Unauthenticated Users
+----------------------------------------------------------------------
+1. Make sure you are completely logged out.
+2. Manually type an admin URL into your browser address bar (e.g. /admin/dashboard 
+   or /admin/products).
+3. The system will intercept the request and redirect you back to the homepage 
+   with an error: "Please login first to access the admin dashboard."
+
+REQUIREMENT 4: Admin Routes Protected From Unauthorized Users (Not Admin Role)
+----------------------------------------------------------------------
+1. Log in using a standard "Customer" account.
+2. Manually type an admin URL into your browser address bar (e.g. /admin/dashboard).
+3. The system's custom middleware will intercept the request, realize you do not 
+   have Admin privileges, and kick you back to the homepage with a bright red 
+   error: "Unauthorized access to admin dashboard."
+4. Furthermore, specific critical management routes (like User Management) are 
+   strictly locked even from "Inventory Managers", ensuring unbreakable security.
+======================================================================
+
+======================================================================
+MP4 PRODUCT REVIEW CRUD - SIMULATION GUIDE (20 PTS COMPLETE TIER)
+======================================================================
+
+Below are the step-by-step instructions on how to perfectly simulate and 
+test all four rubric requirements in your application for the "Reviews" module.
+
+REQUIREMENT 1: Customers that bought a product can post a review (8pts)
+----------------------------------------------------------------------
+1. Log in as a Customer who has a "Delivered" order.
+2. Go to the "My Orders" page and click on that Delivered order to view it 
+   (or navigate directly to the Shop product page of the delivered item).
+3. If the item was delivered and not yet reviewed, you will see a form to 
+   write a review.
+4. Fill out the rating (number of stars), title, and your review text.
+5. Click "Submit Review".
+6. The system accurately verifies the purchase/delivery status and saves it!
+
+REQUIREMENT 2: Customers can update a review (10pts)
+----------------------------------------------------------------------
+1. Navigate back to the product page where you just left the review.
+2. Scroll down to the Reviews section and find your posted review.
+3. Because you are the original author, an "Edit Review" form/button will be 
+   available to you there or in your account dashboard.
+4. Change your star rating or review text, and update it.
+5. The review will be instantly modified in the database.
+
+REQUIREMENT 3: List all reviews on a datatable (5pts)
+----------------------------------------------------------------------
+1. Log out and log in as an Admin.
+2. Go to the "Reviews" tab in the admin sidebar (/admin/reviews).
+3. You will see all customer reviews populated inside a fully interactive 
+   jQuery DataTable.
+4. Use the DataTables "Search reviews..." box or the custom "All Ratings" 
+   and "All Visibilities" dropdowns to instantly filter the table client-side.
+
+REQUIREMENT 4: Administrator can delete user reviews (5pts)
+----------------------------------------------------------------------
+1. While still on the Admin Review DataTable, find a review.
+2. Look at the Actions column on the far right.
+3. Find the red "Trash" icon button and click it to delete.
+4. Confirm the browser prompt.
+5. The review is instantly and permanently deleted by the administrator.
+======================================================================
+
+======================================================================
+MP5 VALIDATION - SIMULATION GUIDE (15 PTS COMPLETE TIER)
+======================================================================
+
+Below are the step-by-step instructions on how to perfectly simulate and 
+test the pure server-side form validation rubric requirements in your application.
+
+REQUIREMENT 1: User Registration Validation
+----------------------------------------------------------------------
+1. Make sure you are completely logged out.
+2. Go to the homepage and open the "Register" form tab.
+3. WITHOUT typing anything into the form, immediately click "Create Account".
+4. The system will forcefully reject the submission via the backend controller.
+5. You will see precise, inline red error messages under the required fields 
+   (e.g., "The full name field is required.", "The email field is required.").
+6. Try typing an invalid email (e.g., "test1234") or a password that is too short 
+   (e.g., "123"). The system will precisely catch these rules too!
+
+REQUIREMENT 2: Form Validation Add/Edit Product/Service
+----------------------------------------------------------------------
+1. Log in as an Admin and navigate to the Products datatable (/admin/products).
+2. Click "Add Product" to open the creation form.
+3. WITHOUT typing anything, immediately click "Save Product".
+4. The system will bypass HTML validation, hit the Laravel backend, and display a huge 
+   red error box at the top listing all missing requirements, AND highlight the blank 
+   required fields (Name, Price, Stock) in precise inline red typography.
+5. Try typing a negative number into the Price or Stock Quantity field.
+6. Click Save again. The robust server-side validation will intercept this, 
+   preventing negative values and displaying the specific rule violations.
+7. This exact identical robust validation checks apply perfectly to the 
+   "Edit Product" form as well.
+======================================================================
+
+======================================================================
+MP6 FILTER - SIMULATION GUIDE (15 PTS COMPLETE TIER)
+======================================================================
+
+Below are the step-by-step instructions on how to perfectly simulate and 
+test the MP6 advanced filtering rubric requirements in your application.
+
+REQUIREMENT 1: Filter by Price (10pts)
+----------------------------------------------------------------------
+1. Log in as a Customer or browse as a Guest.
+2. Navigate to the top navigation bar and click "Shop".
+3. On the left-hand sidebar, locate the "Price Range" filter.
+4. Check a single box, such as "Budget (₱0 - ₱30,000)".
+5. Click the red "Apply" button at the bottom of the sidebar.
+6. Observe that the datatable/grid now ONLY displays products with a price 
+   of ₱30,000 or below. 
+7. You can check multiple price ranges at once (e.g., Budget AND Premium) 
+   and click "Apply" to see a combined price scope.
+
+REQUIREMENT 2: Filter by Price AND Category/Brand/Type (15pts)
+----------------------------------------------------------------------
+1. From the Shop page, click "Clear" on the filters panel to reset.
+2. In the specific "Search products..." bar on the left, type a keyword 
+   (e.g., "Gaming" or the name of a specific Laptop).
+3. Under "Category", check a specific type, such as "Laptops".
+4. Under "Brand", check a specific brand, such as "ASUS".
+5. Under "Price Range", check "Premium (₱70,000 - ₱150,000)".
+6. Click "Apply".
+7. Observe that the system flawlessly combines text search, category, brand, 
+   and price. The URL will reflect all these query parameters perfectly 
+   stacked together, returning only the ultra-specific products that match 
+   EVERY applied filter simultaneously. 
+======================================================================
+
+======================================================================
+MP7 CHARTS - SIMULATION GUIDE (15 PTS COMPLETE TIER)
+======================================================================
+
+Below are the step-by-step instructions on how to perfectly simulate and 
+test the MP7 Charts rubric requirements in your application.
+
+REQUIREMENT 1: Yearly Sales Chart (8pts)
+----------------------------------------------------------------------
+1. Log in as an Administrator.
+2. Navigate to the left sidebar and click "Analytics Charts" under the 
+   "Reports" section.
+3. Look at the bottom-right chart titled "Yearly Sales". 
+4. On the top-right corner of that card, use the Year input stepper to pick 
+   any target year (e.g., 2025), and click "Set Year".
+5. This beautiful line chart fetches all delivered order revenue from 
+   the database, extracts the year from your selection, groups it 
+   natively by month, and displays it. Hover over the nodes to see exact monthly totals.
+
+REQUIREMENT 2: Bar Chart with Date Picker & Product Pie Chart (15pts)
+----------------------------------------------------------------------
+1. On the same "Analytics Charts" page, look at the top section.
+2. Select a "Start Date" and "End Date" in the HTML5 Date Pickers 
+   (e.g., set start date to a few months ago) and click "Apply Filters".
+3. The page reloads and instantly regenerates the two dynamic charts:
+   - "Sales Revenue": A robust Bar Chart plotting everyday revenue 
+     within that exact date range.
+   - "Product Sales Contribution": A colorful Pie/Doughnut Chart 
+     calculating the exact percentage (and raw ₱ amount) of total 
+     sales contributed by every individual product sold in that timeframe.
+4. Hover over the Bar Chart columns or Pie Chart slices to see the 
+   dynamic JavaScript tooltips rendering the precise data payload. 
+======================================================================
