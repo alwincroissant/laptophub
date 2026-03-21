@@ -39,51 +39,58 @@
                     <h6 class="mb-0 fw-bold">Record Restock</h6>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('admin.restock.store') }}" method="POST">
+                    <form action="{{ route('admin.restock.store') }}" method="POST" id="restockForm">
                         @csrf
+                        
                         <div class="mb-3">
-                            <label class="form-label" style="font-size:.85rem; font-weight:600;">Transaction Type</label>
-                            <select name="transaction_type" class="form-select" required>
-                                <option value="add">Add Stock (Restock)</option>
-                                <option value="subtract">Remove Stock (Correction)</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label" style="font-size:.85rem; font-weight:600;">Product</label>
-                            <select name="product_id" class="form-select" required>
-                                <option value="">Select a product...</option>
-                                @foreach($products as $product)
-                                    <option value="{{ $product->product_id }}">{{ $product->name }} (In Stock: {{ $product->stock_qty }})</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label" style="font-size:.85rem; font-weight:600;">Supplier</label>
-                            <select name="supplier_id" class="form-select" required>
+                            <label class="form-label" style="font-size:.85rem; font-weight:600;">Supplier <span class="text-danger">*</span></label>
+                            <select id="supplier_id" name="supplier_id" class="form-select" required onchange="window.location=this.value ? '{{ route('admin.restock.index') }}?supplier_id=' + this.value : '{{ route('admin.restock.index') }}'">
                                 <option value="">Select a supplier...</option>
                                 @foreach($suppliers as $supplier)
-                                    <option value="{{ $supplier->supplier_id }}">{{ $supplier->name }}</option>
+                                    <option value="{{ $supplier->supplier_id }}" {{ request('supplier_id') == $supplier->supplier_id ? 'selected' : '' }}>{{ $supplier->name }}</option>
                                 @endforeach
+                            </select>
+                            <small class="text-muted d-block mt-1">Select a supplier first to filter available products.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" style="font-size:.85rem; font-weight:600;">Product <span class="text-danger">*</span></label>
+                            <select name="product_id" id="product_id" class="form-select" required>
+                                <option value="">Select a product...</option>
+                                @if($selectedSupplierId && count($products) > 0)
+                                    @foreach($products as $product)
+                                        <option value="{{ $product->product_id }}" {{ old('product_id') == $product->product_id ? 'selected' : '' }}>{{ $product->name }} (In Stock: {{ $product->stock_qty }})</option>
+                                    @endforeach
+                                @else
+                                    <option value="" disabled>Please select a supplier first</option>
+                                @endif
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" style="font-size:.85rem; font-weight:600;">Transaction Type <span class="text-danger">*</span></label>
+                            <select name="transaction_type" id="transaction_type" class="form-select" required>
+                                <option value="add">➕ Add / Restock (Stock ↑, Cost deducted)</option>
+                                <option value="adjust">⚖️ Adjust (Stock ±, No revenue impact)</option>
+                                <option value="remove">➖ Remove (Stock ↓, Cost refunded)</option>
                             </select>
                         </div>
 
                         <div class="row">
                             <div class="col-6 mb-3">
-                                <label class="form-label" style="font-size:.85rem; font-weight:600;">Quantity Added</label>
-                                <input type="number" name="quantity_added" class="form-control" min="1" required>
+                                <label class="form-label" style="font-size:.85rem; font-weight:600;">Quantity <span class="text-danger">*</span></label>
+                                <input type="number" name="quantity" id="quantity" class="form-control" min="1" value="{{ old('quantity') }}" required>
                             </div>
 
                             <div class="col-6 mb-3">
-                                <label class="form-label" style="font-size:.85rem; font-weight:600;">Unit Cost (₱)</label>
-                                <input type="number" name="unit_cost" class="form-control" step="0.01" min="0" required>
+                                <label class="form-label" style="font-size:.85rem; font-weight:600;">Unit Cost (₱) <span class="text-danger">*</span></label>
+                                <input type="number" name="unit_cost" id="unit_cost" class="form-control" step="0.01" min="0" value="{{ old('unit_cost') }}" required>
                             </div>
                         </div>
 
                         <div class="mb-4">
                             <label class="form-label" style="font-size:.85rem; font-weight:600;">Notes (Optional)</label>
-                            <textarea name="notes" class="form-control" rows="3"></textarea>
+                            <textarea name="notes" class="form-control" rows="3">{{ old('notes') }}</textarea>
                         </div>
 
                         <button type="submit" class="btn btn-dark w-100">Save Restock</button>
@@ -139,6 +146,7 @@
                         <thead>
                             <tr>
                                 <th>Date</th>
+                                <th>Type</th>
                                 <th>Product</th>
                                 <th>Supplier</th>
                                 <th>Restocked By</th>
@@ -151,6 +159,17 @@
                             @forelse($restocks as $restock)
                                 <tr>
                                     <td>{{ $restock->restocked_at->format('M d, Y') }}<br><span class="text-muted" style="font-size:.75rem">{{ $restock->restocked_at->format('h:i A') }}</span></td>
+                                    <td>
+                                        @if($restock->transaction_type === 'add')
+                                            <span class="badge bg-success">➕ Add</span>
+                                        @elseif($restock->transaction_type === 'adjust')
+                                            <span class="badge bg-warning text-dark">⚖️ Adjust</span>
+                                        @elseif($restock->transaction_type === 'remove')
+                                            <span class="badge bg-danger">➖ Remove</span>
+                                        @else
+                                            <span class="badge bg-secondary">{{ $restock->transaction_type }}</span>
+                                        @endif
+                                    </td>
                                     <td>
                                         <strong>{{ optional($restock->product)->name ?? 'Unknown' }}</strong>
                                         @if($restock->notes)
@@ -188,7 +207,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="empty-state text-center py-5 text-muted">No restocking logs found.</td>
+                                    <td colspan="8" class="empty-state text-center py-5 text-muted">No restocking logs found.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -204,3 +223,4 @@
         </div>
     </div>
 @endsection
+

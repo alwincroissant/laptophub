@@ -32,8 +32,11 @@
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="stat-card blue">
                 <i class="bi bi-currency-dollar icon"></i>
-                <div class="label">Total Revenue</div>
+                <div class="label">Net Revenue</div>
                 <div class="value">P{{ number_format($totalRevenue, 2) }}</div>
+                <div class="change" style="color:var(--muted)">
+                    Gross: P{{ number_format($grossRevenue, 2) }} | Restock impact: {{ $restockImpact >= 0 ? '+' : '-' }}P{{ number_format(abs($restockImpact), 2) }}
+                </div>
             </div>
         </div>
         <div class="col-12 col-sm-6 col-xl-3">
@@ -265,28 +268,39 @@
         <div class="col-12 col-lg-4">
             <div class="table-card h-100">
                 <div class="card-header">
-                    <h5>Top Reviewed Products</h5>
+                    <h5>Recent Stock Changes</h5>
                 </div>
                 <table class="table mb-0">
                     <thead>
                     <tr>
                         <th>Product</th>
-                        <th>Avg</th>
-                        <th>Reviews</th>
+                        <th>Type</th>
+                        <th class="text-end">Qty</th>
                     </tr>
                     </thead>
                     <tbody>
-                    @forelse($topReviewedProducts as $item)
+                    @forelse($recentStockChanges as $change)
                         <tr>
                             <td>
-                                <div style="font-size:.8rem;font-weight:500">{{ $item->product_name }}</div>
+                                <div style="font-size:.8rem;font-weight:500">{{ optional($change->product)->name ?? 'Unknown' }}</div>
+                                <div style="font-size:.7rem;color:var(--muted)">{{ optional($change->restocked_at)->diffForHumans() ?? 'N/A' }}</div>
                             </td>
-                            <td><span class="stars">*</span> <strong>{{ number_format((float) $item->avg_rating, 1) }}</strong></td>
-                            <td>{{ number_format((int) $item->total_reviews) }}</td>
+                            <td>
+                                @if($change->transaction_type === 'add')
+                                    <span class="badge" style="background:#d1e7dd;color:#0a3622;font-size:.65rem">Add</span>
+                                @elseif($change->transaction_type === 'remove')
+                                    <span class="badge" style="background:#f8d7da;color:#842029;font-size:.65rem">Remove</span>
+                                @else
+                                    <span class="badge" style="background:#fff3cd;color:#664d03;font-size:.65rem">Adjust</span>
+                                @endif
+                            </td>
+                            <td class="text-end">
+                                <strong>{{ $change->quantity_added > 0 ? '+' : '' }}{{ number_format((int) $change->quantity_added) }}</strong>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" class="empty-state">No review data yet.</td>
+                            <td colspan="3" class="empty-state">No stock changes yet.</td>
                         </tr>
                     @endforelse
                     </tbody>

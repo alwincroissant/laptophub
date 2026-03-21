@@ -214,6 +214,7 @@ Route::middleware(['auth.admin', 'active', 'admin'])->prefix('admin')->name('adm
 
     Route::get('/restocks', [RestockTransactionController::class, 'index'])->name('restock.index');
     Route::post('/restocks/store', [RestockTransactionController::class, 'store'])->name('restock.store');
+    Route::get('/restocks/supplier-products', [RestockTransactionController::class, 'getSupplierProducts'])->name('restock.supplier-products');
 
     // ============================================
     // STRICT ADMIN MODULES

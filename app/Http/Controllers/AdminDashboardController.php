@@ -7,6 +7,7 @@ use App\Models\OrderItem;
 use App\Models\OrderStatus;
 use App\Models\OrderStatusLog;
 use App\Models\Product;
+use App\Models\RestockTransaction;
 use App\Models\Supplier;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -16,9 +17,23 @@ class AdminDashboardController extends Controller
     public function index()
     {
         $totalOrders = Order::count();
-        $totalRevenue = (float) OrderItem::query()
+        $grossRevenue = (float) OrderItem::query()
             ->selectRaw('COALESCE(SUM(quantity * unit_price), 0) as total')
             ->value('total');
+
+        $restockExpense = (float) RestockTransaction::query()
+            ->where('transaction_type', 'add')
+            ->selectRaw('COALESCE(SUM(quantity_added * unit_cost), 0) as total')
+            ->value('total');
+
+        $restockRefund = (float) RestockTransaction::query()
+            ->where('transaction_type', 'remove')
+            ->selectRaw('COALESCE(SUM(ABS(quantity_added) * unit_cost), 0) as total')
+            ->value('total');
+
+        $restockImpact = $restockRefund - $restockExpense;
+        $totalRevenue = $grossRevenue + $restockImpact;
+
         $activeUsers = User::where('is_active', true)->count();
         $activeProducts = Product::where('is_archived', false)->count();
         $lowStockCount = Product::where('is_archived', false)
@@ -96,9 +111,21 @@ class AdminDashboardController extends Controller
             ->limit(6)
             ->get(['supplier_id', 'name', 'contact_name', 'is_active']);
 
+        $recentStockChanges = RestockTransaction::query()
+            ->with([
+                'product:product_id,name',
+                'supplier:supplier_id,name',
+                'manager:user_id,full_name',
+            ])
+            ->orderByDesc('restocked_at')
+            ->limit(8)
+            ->get();
+
         return view('admin.dashboard', [
             'totalOrders' => $totalOrders,
+            'grossRevenue' => $grossRevenue,
             'totalRevenue' => $totalRevenue,
+            'restockImpact' => $restockImpact,
             'activeUsers' => $activeUsers,
             'activeProducts' => $activeProducts,
             'lowStockCount' => $lowStockCount,
@@ -109,6 +136,7 @@ class AdminDashboardController extends Controller
             'topReviewedProducts' => $topReviewedProducts,
             'recentUsers' => $recentUsers,
             'activeSuppliers' => $activeSuppliers,
+            'recentStockChanges' => $recentStockChanges,
         ]);
     }
 }

@@ -13,6 +13,7 @@ class RestockTransaction extends Model
     protected $fillable = [
         'product_id',
         'supplier_id',
+        'transaction_type',
         'managed_by',
         'quantity_added',
         'unit_cost',
