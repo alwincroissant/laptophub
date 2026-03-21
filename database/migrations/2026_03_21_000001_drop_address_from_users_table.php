@@ -6,17 +6,31 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
+        if (!Schema::hasColumn('users', 'address')) {
+            return;
+        }
+
         Schema::table('users', function (Blueprint $table) {
-            $table->timestamp('email_verified_at')->nullable()->after('is_active');
+            $table->dropColumn('address');
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
+        if (Schema::hasColumn('users', 'address')) {
+            return;
+        }
+
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('email_verified_at');
+            $table->text('address')->nullable()->after('contact_number');
         });
     }
 };

@@ -67,8 +67,43 @@
                 </div>
 
                 <div class="col-12">
-                    <label class="form-label" for="address">Address</label>
-                    <textarea id="address" name="address" class="form-control" rows="3">{{ old('address') }}</textarea>
+                    <label class="form-label" for="street_address">Default Address (optional)</label>
+                    <p class="text-muted small mb-2">If provided, this will be saved to <code>user_addresses</code> as the user's default address.</p>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label" for="address_label">Address Label</label>
+                    <input id="address_label" name="address_label" type="text" class="form-control" value="{{ old('address_label') }}" placeholder="Home, Office, Condo">
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label" for="recipient_name">Recipient Name</label>
+                    <input id="recipient_name" name="recipient_name" type="text" class="form-control" value="{{ old('recipient_name', old('full_name')) }}" placeholder="Full name of receiver">
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label" for="address_phone">Address Phone</label>
+                    <input id="address_phone" name="address_phone" type="text" class="form-control" value="{{ old('address_phone', old('contact_number')) }}" placeholder="09XX XXX XXXX">
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label" for="region">Region / Province</label>
+                    <input id="region" name="region" type="text" class="form-control" value="{{ old('region') }}" placeholder="e.g. Metro Manila">
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label" for="city">City / Municipality</label>
+                    <input id="city" name="city" type="text" class="form-control" value="{{ old('city') }}" placeholder="e.g. Quezon City">
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label" for="postal_code">Postal Code</label>
+                    <input id="postal_code" name="postal_code" type="text" class="form-control" value="{{ old('postal_code') }}" placeholder="e.g. 1100">
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label" for="street_address">Street Address</label>
+                    <textarea id="street_address" name="street_address" class="form-control" rows="3" placeholder="House/Unit, street, barangay">{{ old('street_address') }}</textarea>
                 </div>
 
                 <div class="col-md-6">
