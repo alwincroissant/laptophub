@@ -615,6 +615,10 @@
               <span>Shipping</span>
               <span>₱{{ number_format($shipping, 2) }}</span>
             </div>
+            <div class="summary-item">
+              <span>Tax ({{ $taxRateSetting ?? 0 }}%)</span>
+              <span>₱{{ number_format($taxAmount ?? 0, 2) }}</span>
+            </div>
             <div class="summary-item total">
               <span>Total</span>
               <span>₱{{ number_format($total, 2) }}</span>

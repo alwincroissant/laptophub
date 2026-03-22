@@ -13,6 +13,7 @@ use App\Http\Controllers\RestockTransactionController;
 use App\Http\Controllers\ExpenseReportController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\SettingController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\CartController;
@@ -257,6 +258,9 @@ Route::middleware(['auth.admin', 'active', 'admin'])->prefix('admin')->name('adm
         Route::get('/roles/{role}/edit', [RoleController::class, 'edit'])->name('role.edit');
         Route::put('/roles/{role}', [RoleController::class, 'update'])->name('role.update');
         Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('role.destroy');
+
+        Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
+        Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
 
     });
 });

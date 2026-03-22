@@ -196,7 +196,7 @@ class ShopController extends Controller
         $reviews = Review::query()
             ->where('product_id', $product->product_id)
             ->where('is_visible', true)
-            ->with('user:user_id,full_name')
+            ->with('user:user_id,first_name,last_name')
             ->orderByDesc('created_at')
             ->limit(12)
             ->get();

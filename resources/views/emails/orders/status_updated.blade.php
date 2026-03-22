@@ -19,9 +19,19 @@ Your order status has been updated to: **{{ $order->status->status_name }}**.
 @php $subtotal += ($item->unit_price * $item->quantity); @endphp
 @endforeach
 
+@php
+  $settings = \App\Models\Setting::pluck('value', 'key');
+  $shippingFeeSetting = isset($settings['shipping_fee']) ? (float) $settings['shipping_fee'] : 0;
+  $taxRateSetting = isset($settings['tax_rate']) ? (float) $settings['tax_rate'] : 0;
+  $shipping = $subtotal > 0 ? $shippingFeeSetting : 0;
+  $taxAmount = $subtotal > 0 ? ($subtotal * ($taxRateSetting / 100)) : 0;
+  $total = $subtotal + $shipping + $taxAmount;
+@endphp
+
 **Subtotal:** ₱{{ number_format($subtotal, 2) }}  
-**Shipping:** ₱200.00  
-**Total:** ₱{{ number_format($subtotal + 200, 2) }}  
+**Shipping:** ₱{{ number_format($shipping, 2) }}  
+**Tax ({{ $taxRateSetting ?? 0 }}%):** ₱{{ number_format($taxAmount ?? 0, 2) }}  
+**Total:** ₱{{ number_format($total, 2) }}  
 
 ---
 

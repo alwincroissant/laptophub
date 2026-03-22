@@ -37,7 +37,7 @@ class AdminReviewController extends Controller
     public function edit(Review $review): View
     {
         $review->load([
-            'user:user_id,full_name,email',
+            'user:user_id,first_name,last_name,email',
             'product:product_id,name',
         ]);
 

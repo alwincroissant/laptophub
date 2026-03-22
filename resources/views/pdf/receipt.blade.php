@@ -84,12 +84,23 @@
         </tr>
         <tr>
             <th class="text-right">Shipping:</th>
-            @php $shipping = $subtotal > 0 ? 200 : 0; @endphp
+            @php 
+                $settings = \App\Models\Setting::pluck('value', 'key');
+                $shippingFeeSetting = isset($settings['shipping_fee']) ? (float) $settings['shipping_fee'] : 0;
+                $taxRateSetting = isset($settings['tax_rate']) ? (float) $settings['tax_rate'] : 0;
+                $shipping = $subtotal > 0 ? $shippingFeeSetting : 0;
+                $taxAmount = $subtotal > 0 ? ($subtotal * ($taxRateSetting / 100)) : 0;
+                $total = $subtotal + $shipping + $taxAmount;
+            @endphp
             <td class="text-right">P{{ number_format($shipping, 2) }}</td>
         </tr>
         <tr>
+            <th class="text-right">Tax ({{ $taxRateSetting ?? 0 }}%):</th>
+            <td class="text-right">P{{ number_format($taxAmount ?? 0, 2) }}</td>
+        </tr>
+        <tr>
             <th class="text-right" style="font-size: 18px;">Total:</th>
-            <td class="text-right" style="font-size: 18px; font-weight: bold; color: #c0392b;">P{{ number_format($subtotal + $shipping, 2) }}</td>
+            <td class="text-right" style="font-size: 18px; font-weight: bold; color: #c0392b;">P{{ number_format($total, 2) }}</td>
         </tr>
     </table>
 

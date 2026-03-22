@@ -41,7 +41,7 @@ class AdminDashboardController extends Controller
             ->count();
 
         $recentOrders = Order::with([
-            'user:user_id,full_name',
+            'user:user_id,first_name,last_name',
             'status:status_id,status_name',
             'paymentMethod:payment_method_id,method_name',
             'items:order_item_id,order_id,quantity,unit_price',
@@ -78,7 +78,7 @@ class AdminDashboardController extends Controller
         $recentActivities = OrderStatusLog::with([
             'order:order_id',
             'status:status_id,status_name',
-            'changedBy:user_id,full_name',
+            'changedBy:user_id,first_name,last_name',
         ])
             ->orderByDesc('changed_at')
             ->limit(8)
@@ -115,7 +115,7 @@ class AdminDashboardController extends Controller
             ->with([
                 'product:product_id,name',
                 'supplier:supplier_id,name',
-                'manager:user_id,full_name',
+                'manager:user_id,first_name,last_name',
             ])
             ->orderByDesc('restocked_at')
             ->limit(8)

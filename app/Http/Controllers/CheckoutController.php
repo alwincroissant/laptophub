@@ -49,8 +49,13 @@ class CheckoutController extends Controller
             return $item->product->price * $item->quantity;
         });
 
-        $shipping = $subtotal > 0 ? 200 : 0;
-        $total = $subtotal + $shipping;
+        $settings = \App\Models\Setting::pluck('value', 'key');
+        $shippingFeeSetting = isset($settings['shipping_fee']) ? (float) $settings['shipping_fee'] : 0;
+        $taxRateSetting = isset($settings['tax_rate']) ? (float) $settings['tax_rate'] : 0;
+
+        $shipping = $subtotal > 0 ? $shippingFeeSetting : 0;
+        $taxAmount = $subtotal > 0 ? ($subtotal * ($taxRateSetting / 100)) : 0;
+        $total = $subtotal + $shipping + $taxAmount;
 
         $selectedCartItemIds = $cartItems->pluck('cart_item_id')->values();
         $addresses = UserAddress::where('user_id', $user->user_id)
@@ -65,7 +70,7 @@ class CheckoutController extends Controller
 
         $selectedAddressId = $selectedAddress ? (int) $selectedAddress->address_id : null;
 
-        return view('customer.checkout.index', compact('cartItems', 'subtotal', 'shipping', 'total', 'selectedCartItemIds', 'addresses', 'selectedAddressId'));
+        return view('customer.checkout.index', compact('cartItems', 'subtotal', 'shipping', 'taxAmount', 'taxRateSetting', 'total', 'selectedCartItemIds', 'addresses', 'selectedAddressId'));
     }
 
     /**
@@ -134,8 +139,13 @@ class CheckoutController extends Controller
                     return $item->product->price * $item->quantity;
                 });
 
-                $shipping = $subtotal > 0 ? 200 : 0;
-                $total = $subtotal + $shipping;
+                $settings = \App\Models\Setting::pluck('value', 'key');
+                $shippingFeeSetting = isset($settings['shipping_fee']) ? (float) $settings['shipping_fee'] : 0;
+                $taxRateSetting = isset($settings['tax_rate']) ? (float) $settings['tax_rate'] : 0;
+
+                $shipping = $subtotal > 0 ? $shippingFeeSetting : 0;
+                $taxAmount = $subtotal > 0 ? ($subtotal * ($taxRateSetting / 100)) : 0;
+                $total = $subtotal + $shipping + $taxAmount;
 
                 $order = Order::create([
                     'user_id' => $user->user_id,

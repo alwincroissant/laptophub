@@ -456,6 +456,10 @@
               <span>Shipping</span>
               <span id="summary-shipping">₱{{ number_format($shipping, 2) }}</span>
             </div>
+            <div class="summary-row">
+              <span>Tax ({{ $taxRateSetting ?? 0 }}%)</span>
+              <span id="summary-tax">₱{{ number_format($taxAmount, 2) }}</span>
+            </div>
             <div class="summary-row total">
               <span>Total</span>
               <span id="summary-total">₱{{ number_format($total, 2) }}</span>
@@ -486,8 +490,10 @@
   const proceedCheckoutBtn = document.getElementById('proceed-checkout-btn');
   const summarySubtotal = document.getElementById('summary-subtotal');
   const summaryShipping = document.getElementById('summary-shipping');
+  const summaryTax = document.getElementById('summary-tax');
   const summaryTotal = document.getElementById('summary-total');
   const shippingAmount = @json($shipping);
+  const taxRateSetting = @json($taxRateSetting ?? 0);
 
   if (selectedInputsContainer && proceedCheckoutBtn && summarySubtotal && summaryShipping && summaryTotal && itemCheckboxes.length) {
     function formatPeso(value) {
@@ -510,10 +516,12 @@
         return sum + Number(checkbox.dataset.lineTotal || 0);
       }, 0);
       const shipping = subtotal > 0 ? shippingAmount : 0;
-      const total = subtotal + shipping;
+      const tax = subtotal > 0 ? (subtotal * (Number(taxRateSetting) / 100)) : 0;
+      const total = subtotal + shipping + tax;
 
       summarySubtotal.textContent = formatPeso(subtotal);
       summaryShipping.textContent = formatPeso(shipping);
+      if (summaryTax) summaryTax.textContent = formatPeso(tax);
       summaryTotal.textContent = formatPeso(total);
       proceedCheckoutBtn.disabled = selectedItems.length === 0;
     }

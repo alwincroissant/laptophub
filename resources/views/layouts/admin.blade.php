@@ -70,7 +70,7 @@
         <a href="{{ route('admin.role.index') }}" class="nav-link {{ (($activeNav ?? '') === 'role') ? 'active' : '' }}"><i class="bi bi-shield-lock"></i> Roles</a>
 
         <div class="nav-section-label">System</div>
-        <a href="#" class="nav-link"><i class="bi bi-gear"></i> Settings</a>
+        <a href="{{ route('admin.settings.index') }}" class="nav-link {{ (($activeNav ?? '') === 'settings') ? 'active' : '' }}"><i class="bi bi-gear"></i> Settings</a>
         @endif
     </nav>
 

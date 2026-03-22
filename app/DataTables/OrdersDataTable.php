@@ -15,6 +15,10 @@ class OrdersDataTable extends DataTable
 {
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
+        $settings = \App\Models\Setting::pluck('value', 'key');
+        $shippingFeeSetting = isset($settings['shipping_fee']) ? (float) $settings['shipping_fee'] : 0;
+        $taxRateSetting = isset($settings['tax_rate']) ? (float) $settings['tax_rate'] : 0;
+
         return (new EloquentDataTable($query))
             ->addColumn('action', function (Order $order) {
                 return view('admin.order.datatables_actions', compact('order'))->render();
@@ -22,8 +26,12 @@ class OrdersDataTable extends DataTable
             ->addColumn('status_badge', function (Order $order) {
                 return view('admin.order.datatables_status', compact('order'))->render();
             })
-            ->editColumn('subtotal', function (Order $order) {
-                return '₱' . number_format((float) $order->subtotal, 2);
+            ->editColumn('subtotal', function (Order $order) use ($shippingFeeSetting, $taxRateSetting) {
+                $subtotal = (float) $order->subtotal;
+                $shipping = $subtotal > 0 ? $shippingFeeSetting : 0;
+                $taxAmount = $subtotal > 0 ? ($subtotal * ($taxRateSetting / 100)) : 0;
+                $total = $subtotal + $shipping + $taxAmount;
+                return '₱' . number_format($total, 2);
             })
             ->editColumn('placed_at', function (Order $order) {
                 return optional($order->placed_at)->format('M d, Y h:i A') ?? '—';
@@ -108,7 +116,7 @@ class OrdersDataTable extends DataTable
             Column::make('customer_name')->title('Customer')->name('customer_name'),
             Column::make('customer_email')->title('Email')->name('customer_email'),
             Column::make('item_count')->title('Items')->searchable(false),
-            Column::make('subtotal')->title('Subtotal')->searchable(false)->addClass('text-end'),
+            Column::make('subtotal')->title('Total')->searchable(false)->addClass('text-end'),
             Column::computed('status_badge')->title('Status')->addClass('text-center'),
             Column::make('placed_at')->title('Placed On'),
             Column::make('payment_method')->title('Payment')->name('payment_methods.method_name'),

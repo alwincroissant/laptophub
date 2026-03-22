@@ -23,6 +23,8 @@ class CartController extends Controller
                 'cartItems' => collect(),
                 'subtotal' => 0,
                 'shipping' => 0,
+                'taxAmount' => 0,
+                'taxRateSetting' => 0,
                 'total' => 0
             ]);
         }
@@ -35,10 +37,15 @@ class CartController extends Controller
             return $item->product->price * $item->quantity;
         });
 
-        $shipping = $subtotal > 0 ? 200 : 0;
-        $total = $subtotal + $shipping;
+        $settings = \App\Models\Setting::pluck('value', 'key');
+        $shippingFeeSetting = isset($settings['shipping_fee']) ? (float) $settings['shipping_fee'] : 0;
+        $taxRateSetting = isset($settings['tax_rate']) ? (float) $settings['tax_rate'] : 0;
 
-        return view('customer.cart.index', compact('cartItems', 'subtotal', 'shipping', 'total'));
+        $shipping = $subtotal > 0 ? $shippingFeeSetting : 0;
+        $taxAmount = $subtotal > 0 ? ($subtotal * ($taxRateSetting / 100)) : 0;
+        $total = $subtotal + $shipping + $taxAmount;
+
+        return view('customer.cart.index', compact('cartItems', 'subtotal', 'shipping', 'taxAmount', 'taxRateSetting', 'total'));
     }
 
     /**

@@ -412,6 +412,11 @@
     </div>
 
     @if($orders && $orders->count() > 0)
+      @php
+        $settings = \App\Models\Setting::pluck('value', 'key');
+        $shippingFeeSetting = isset($settings['shipping_fee']) ? (float) $settings['shipping_fee'] : 0;
+        $taxRateSetting = isset($settings['tax_rate']) ? (float) $settings['tax_rate'] : 0;
+      @endphp
       @foreach($orders as $order)
         <div class="order-card">
           <div class="order-header">
@@ -425,7 +430,13 @@
               </div>
             </div>
             <div style="text-align: right">
-              <div class="order-total">₱{{ number_format($order->items->sum(function($item) { return $item->unit_price * $item->quantity; }), 2) }}</div>
+              @php
+                $orderSubtotal = $order->items->sum(function($item) { return $item->unit_price * $item->quantity; });
+                $orderShipping = $orderSubtotal > 0 ? $shippingFeeSetting : 0;
+                $orderTax = $orderSubtotal > 0 ? ($orderSubtotal * ($taxRateSetting / 100)) : 0;
+                $orderTotal = $orderSubtotal + $orderShipping + $orderTax;
+              @endphp
+              <div class="order-total">₱{{ number_format($orderTotal, 2) }}</div>
             </div>
           </div>
 
