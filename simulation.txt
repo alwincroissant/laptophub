@@ -13,9 +13,10 @@ REQUIREMENT 1: Product/Service CRUD datatable (8pts)
    "Simulation Laptop", set a price, stock quantity, category, and brand. 
    Click "Save".
 3. To test READ & DATATABLE: Go back to the product list. Notice that the 
-   table has a search bar at the top right, and pagination at the bottom right. 
-   Search for "Simulation Laptop". The table will instantly filter the list 
-   without reloading the page.
+   table has a search bar, pagination, and export buttons (Excel/CSV/Print). 
+   This table uses Yajra Server-Side processing for maximum performance.
+   Search for "Simulation Laptop". The table will fetch the filtered list 
+   via AJAX from the server without reloading the whole page.
 4. To test UPDATE: Click the blue Edit icon (pencil) next to your new laptop. 
    Change its price. Save, and check the table again to verify the update.
 5. To test DELETE: Click the yellow Soft Delete icon (archive box). Confirm it.
@@ -24,11 +25,12 @@ REQUIREMENT 1: Product/Service CRUD datatable (8pts)
 
 REQUIREMENT 2: Product/Service CRUDRestore datatable upload a single photo (10pts)
 ----------------------------------------------------------------------
-1. First, test Restore: In the Datatables search box on /admin/products, 
-   type the word "Trashed". 
-2. The table will instantly show your soft-deleted "Simulation Laptop". 
+1. First, test Restore: Soft delete a product. Notice it stays visible within the 
+   Server-Side Datatable (because the backend query uses `withTrashed()`), 
+   but its status becomes "Trashed". 
+2. Search for the exact name of your soft-deleted "Simulation Laptop" in the search box.
 3. Click the green Recover icon (circular arrow) next to it. 
-4. The product badge will change back to "Active", proving CRUDRestore works!
+4. The product badge will change back to "Active", proving CRUDRestore works seamlessly!
 5. To test single photo upload: Click the Edit icon on the laptop again. 
    Under "Image" (the main single image input), select a picture from your 
    computer and click Save. 
@@ -101,9 +103,9 @@ REQUIREMENT 3: list users on a datatable. (5pts)
 ----------------------------------------------------------------------
 1. Log in to your Admin account.
 2. Go to the "Users" tab in the admin sidebar (/admin/user).
-3. The user list is now fully powered by jQuery DataTables!
-4. Type any name or email in the DataTables "Search" box (top right of the table) to see instant client-side filtering. 
-5. Change the "Show N entries" dropdown (top left of the table) to test dynamic pagination.
+3. The user list is now fully powered by Yajra Server-Side DataTables!
+4. Type any name or email in the DataTables "Search" box. The list will instantly filter via lightning-fast AJAX queries. 
+5. Use the custom "All Roles" and "All Statuses" dropdowns adjacent to the search input to test precise backend column filtering.
 
 REQUIREMENT 4: admin can set the status of a user to active/inactive. update role of user. (5pts)
 ----------------------------------------------------------------------
@@ -194,10 +196,11 @@ REQUIREMENT 3: List all reviews on a datatable (5pts)
 ----------------------------------------------------------------------
 1. Log out and log in as an Admin.
 2. Go to the "Reviews" tab in the admin sidebar (/admin/reviews).
-3. You will see all customer reviews populated inside a fully interactive 
-   jQuery DataTable.
-4. Use the DataTables "Search reviews..." box or the custom "All Ratings" 
-   and "All Visibilities" dropdowns to instantly filter the table client-side.
+3. You will see all customer reviews populated inside a lightning-fast, highly optimized 
+   Yajra Server-Side DataTable (matching your repository standards explicitly).
+4. Use the Global DataTables "Search reviews..." box to search review content and products.
+5. Use the custom "All Ratings" and "All Visibilities" dropdowns to instantaneously 
+   send discrete backend data filtering queries over AJAX without reloading the page.
 
 REQUIREMENT 4: Administrator can delete user reviews (5pts)
 ----------------------------------------------------------------------

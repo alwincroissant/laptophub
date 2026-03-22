@@ -3,24 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Review;
+use App\DataTables\ReviewsDataTable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
 class AdminReviewController extends Controller
 {
-    public function index(Request $request)
+    public function index(ReviewsDataTable $dataTable, Request $request)
     {
-        $reviews = Review::query()
-            ->with([
-                'user:user_id,full_name,email',
-                'product:product_id,name',
-                'orderItem:order_item_id,order_id',
-                'orderItem.order:order_id,placed_at',
-            ])
-            ->orderByDesc('created_at')
-            ->get();
-
         $metrics = [
             'total' => Review::count(),
             'shown' => Review::where('is_visible', true)->count(),
@@ -28,8 +19,7 @@ class AdminReviewController extends Controller
             'avg_rating' => (float) (Review::avg('rating') ?? 0),
         ];
 
-        return view('admin.review.index', [
-            'reviews' => $reviews,
+        return $dataTable->render('admin.review.index', [
             'metrics' => $metrics,
         ]);
     }

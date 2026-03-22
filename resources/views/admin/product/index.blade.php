@@ -67,94 +67,9 @@
     <div class="table-card">
         <div class="card-header">
             <h5>Product List</h5>
-            <span class="text-muted" style="font-size:.78rem">{{ number_format($products->count()) }} total results</span>
         </div>
         <div class="table-responsive">
-            <table class="table table-hover mb-0 align-middle" id="productsTable">
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Image</th>
-                    <th>Product</th>
-                    <th>Category</th>
-                    <th>Brand</th>
-                    <th class="text-end">Price</th>
-                    <th class="text-end">Stock</th>
-                    <th class="text-end">Threshold</th>
-                    <th>Status</th>
-                    <th>Last Updated</th>
-                    <th>Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                @forelse ($products as $product)
-                    @php
-                        $isLowStock = ! $product->is_archived && $product->stock_qty <= $product->low_stock_threshold;
-                    @endphp
-                    <tr>
-                        <td>#{{ $product->product_id }}</td>
-                        <td>
-                            @if ($product->image_url)
-                                <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="img-thumbnail" style="width:52px;height:52px;object-fit:cover;">
-                            @else
-                                <span class="text-muted">—</span>
-                            @endif
-                        </td>
-                        <td>{{ $product->name }}</td>
-                        <td>{{ $product->category_name ?? '—' }}</td>
-                        <td>{{ $product->brand_name ?? '—' }}</td>
-                        <td class="text-end">₱{{ number_format((float) $product->price, 2) }}</td>
-                        <td class="text-end">{{ number_format($product->stock_qty) }}</td>
-                        <td class="text-end">{{ number_format($product->low_stock_threshold) }}</td>
-                        <td>
-                            @if ($product->deleted_at)
-                                <span class="status-badge badge-archived">Trashed</span>
-                            @elseif ($product->is_archived)
-                                <span class="status-badge badge-archived">Archived</span>
-                            @elseif ($product->stock_qty == 0)
-                                <span class="status-badge badge-out">Out of Stock</span>
-                            @elseif ($isLowStock)
-                                <span class="status-badge badge-low">Low Stock</span>
-                            @else
-                                <span class="status-badge badge-active">Active</span>
-                            @endif
-                        </td>
-                        <td>{{ optional($product->updated_at)->format('M d, Y h:i A') ?? '—' }}</td>
-                        <td>
-                            <div class="d-flex gap-2">
-                                <a href="{{ route('admin.product.show', $product->product_id) }}" class="btn btn-sm btn-outline-secondary" title="View" aria-label="View">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                @if ($product->deleted_at)
-                                    <form method="POST" action="{{ route('admin.product.restore', $product->product_id) }}" onsubmit="return confirm('Recover this product?')">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" class="btn btn-sm btn-outline-success" title="Recover" aria-label="Recover">
-                                            <i class="bi bi-arrow-counterclockwise"></i>
-                                        </button>
-                                    </form>
-                                @else
-                                    <a href="{{ route('admin.product.edit', $product) }}" class="btn btn-sm btn-outline-primary" title="Edit" aria-label="Edit">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
-                                    <form method="POST" action="{{ route('admin.product.destroy', $product) }}" onsubmit="return confirm('Soft delete this product?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-warning" title="Soft Delete" aria-label="Soft Delete">
-                                            <i class="bi bi-archive"></i>
-                                        </button>
-                                    </form>
-                                @endif
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="11" class="empty-state">No products found for this filter.</td>
-                    </tr>
-                @endforelse
-                </tbody>
-            </table>
+            {!! $dataTable->table(['class' => 'table table-hover mb-0 align-middle w-100', 'id' => 'productsTable']) !!}
         </div>
 
 @push('scripts')
@@ -163,11 +78,10 @@
     <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('#productsTable').DataTable({
-                "pageLength": 12,
-                "order": [] 
-            });
+            // Yajra DataTables Initialization
         });
     </script>
+    <script src="{{ asset('vendor/datatables/buttons.server-side.js') }}"></script>
+    {!! $dataTable->scripts() !!}
 @endpush
 @endsection

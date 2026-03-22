@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\DataTables\UsersDataTable;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\UserAddress;
@@ -12,42 +13,12 @@ use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
-    public function index(Request $request)
+    public function index(UsersDataTable $dataTable, Request $request)
     {
-        $search = trim((string) $request->input('search', ''));
-        $status = (string) $request->input('status', 'all');
-        $roleId = (int) $request->input('role_id', 0);
-
         $roles = Role::orderBy('role_name')->get(['role_id', 'role_name']);
 
-        $query = User::query()->with('role');
-
-        if ($search !== '') {
-            $query->where(function ($subQuery) use ($search) {
-                $subQuery->where('full_name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('contact_number', 'like', "%{$search}%");
-            });
-        }
-
-        if ($status === 'active') {
-            $query->where('is_active', true);
-        } elseif ($status === 'inactive') {
-            $query->where('is_active', false);
-        }
-
-        if ($roleId > 0) {
-            $query->where('role_id', $roleId);
-        }
-
-        $users = $query->orderBy('full_name')->get();
-
-        return view('admin.user.index', [
-            'users' => $users,
+        return $dataTable->render('admin.user.index', [
             'roles' => $roles,
-            'search' => $search,
-            'status' => $status,
-            'roleId' => $roleId,
         ]);
     }
 

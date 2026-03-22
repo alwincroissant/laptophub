@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\DataTables\ProductsDataTable;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
@@ -15,7 +16,7 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(ProductsDataTable $dataTable, Request $request)
     {
         $metrics = [
             'total' => Product::count(),
@@ -28,27 +29,7 @@ class ProductController extends Controller
                 ->count(),
         ];
 
-        $products = Product::withTrashed()
-            ->leftJoin('categories', 'products.category_id', '=', 'categories.category_id')
-            ->leftJoin('brands', 'products.brand_id', '=', 'brands.brand_id')
-            ->select([
-                'products.product_id',
-                'products.name',
-                'products.image_url',
-                'products.price',
-                'products.stock_qty',
-                'products.low_stock_threshold',
-                'products.is_archived',
-                'products.updated_at',
-                'products.deleted_at',
-                'categories.name as category_name',
-                'brands.name as brand_name',
-            ])
-            ->orderByDesc('products.updated_at')
-            ->get();
-
-        return view('admin.product.index', [
-            'products' => $products,
+        return $dataTable->render('admin.product.index', [
             'metrics' => $metrics,
         ]);
     }
