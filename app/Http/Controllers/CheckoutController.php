@@ -161,11 +161,23 @@ class CheckoutController extends Controller
                         'order_id' => $order->order_id,
                         'product_id' => $cartItem->product_id,
                         'quantity' => $cartItem->quantity,
-                        'unit_price' => $cartItem->product->price
+                        'unit_price' => $cartItem->product->price,
                     ]);
 
-                    \App\Models\Product::where('product_id', $cartItem->product_id)
-                        ->decrement('stock_qty', $cartItem->quantity);
+                    // Log the sale deduction in the inventory tracker
+                    \App\Models\RestockTransaction::create([
+                        'product_id' => $cartItem->product_id,
+                        'supplier_id' => null,
+                        'transaction_type' => 'remove',
+                        'managed_by' => $user->user_id,
+                        'quantity_added' => -$cartItem->quantity,
+                        'unit_cost' => 0, // Ignored logic for 'remove' transactions on the backend
+                        'notes' => 'Sale: Order #' . $order->order_id,
+                        'restocked_at' => now(),
+                    ]);
+
+                    // Decrease stock
+                    $cartItem->product->decrement('stock_qty', $cartItem->quantity);
                 }
 
                 CartItem::whereIn('cart_item_id', $cartItems->pluck('cart_item_id'))->delete();

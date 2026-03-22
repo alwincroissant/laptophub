@@ -107,6 +107,17 @@ class OrderController extends Controller
             foreach ($order->items as $item) {
                 \App\Models\Product::where('product_id', $item->product_id)
                     ->increment('stock_qty', $item->quantity);
+
+                \App\Models\RestockTransaction::create([
+                    'product_id' => $item->product_id,
+                    'supplier_id' => null,
+                    'transaction_type' => 'add',
+                    'managed_by' => $user->user_id,
+                    'quantity_added' => $item->quantity,
+                    'unit_cost' => 0,
+                    'notes' => 'Cancellation Restoration: Order #' . $order->order_id,
+                    'restocked_at' => now(),
+                ]);
             }
         });
 
