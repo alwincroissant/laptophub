@@ -347,3 +347,33 @@ REQUIREMENT 1: Transaction Email & Status Update Emails with PDF Attachments (30
 8. Check the customer's email inbox again. You will receive an "Order Status Updated" email.
 9. This update email will flawlessly attach an identical newly-generated `Receipt-Order-[ID].pdf` reflecting the new status!
 ======================================================================
+
+======================================================================
+MP9 USER TABLE REDEFINITION (FULL_NAME SPLIT) - SIMULATION GUIDE
+======================================================================
+
+Below are the step-by-step instructions on how to simulate and verify the split of the full_name column into first_name and last_name.
+
+REQUIREMENT 1: User Registration with Split Names
+----------------------------------------------------------------------
+1. Navigate to the homepage (/) and click the "Register" button.
+2. Observe that the form now asks explicitly for "First Name" and "Last Name" independently.
+3. Fill out the fields and create an account. The database seamlessly saves these into the restructured users table.
+
+REQUIREMENT 2: Admin Profile and Customer Settings
+----------------------------------------------------------------------
+1. Log in to a Customer or Admin account and navigate to the Account Settings/Profile form.
+2. Check the Profile Details section. The names are loaded and validated independently as First Name and Last Name.
+3. Update either name and save. The changes will successfully persist in the modified table safely.
+
+REQUIREMENT 3: Admin Users DataTable 
+----------------------------------------------------------------------
+1. Navigate to the Admin Users Management page (/admin/user).
+2. Look at the DataTable. The backend has been rewritten to natively represent explicit "First Name" and "Last Name" columns.
+3. Using the global search will accurately locate keyword matches natively within both individual fields.
+
+REQUIREMENT 4: Legacy Name Compatibility (Accessor)
+----------------------------------------------------------------------
+1. Check visually dependent locations, such as the Top Navigation Bar, Order Tracking, Customer Receipts, or Product Reviews.
+2. The user's concatenated name renders flawlessly everywhere because of the implemented core Eloquent `getFullNameAttribute()` backward-compatible accessor.
+======================================================================

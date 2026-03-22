@@ -78,7 +78,25 @@
     <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
     <script>
         $(document).ready(function() {
-            // Yajra DataTables Initialization
+            var categoryFilter = $('<select class="form-select form-select-sm ms-2 d-inline-block w-auto"><option value="">All Categories</option>@foreach($categories as $category)<option value="{{ $category->name }}">{{ $category->name }}</option>@endforeach</select>');
+            
+            var brandFilter = $('<select class="form-select form-select-sm ms-2 d-inline-block w-auto"><option value="">All Brands</option>@foreach($brands as $brand)<option value="{{ $brand->name }}">{{ $brand->name }}</option>@endforeach</select>');
+
+            setTimeout(function() {
+                $('.dataTables_filter').addClass('d-flex justify-content-end align-items-center mb-3');
+                $('.dataTables_filter label').addClass('mb-0 me-2');
+                $('.dataTables_filter').append(categoryFilter).append(brandFilter);
+
+                var table = window.LaravelDataTables["productsTable"];
+
+                categoryFilter.on('change', function() {
+                    table.column(3).search($(this).val()).draw();
+                });
+
+                brandFilter.on('change', function() {
+                    table.column(4).search($(this).val()).draw();
+                });
+            }, 300);
         });
     </script>
     <script src="{{ asset('vendor/datatables/buttons.server-side.js') }}"></script>

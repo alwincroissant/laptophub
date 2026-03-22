@@ -33,7 +33,8 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'role_id' => ['required', 'integer', 'exists:roles,role_id'],
-            'full_name' => ['required', 'string', 'max:100'],
+            'first_name' => ['required', 'string', 'max:50'],
+            'last_name' => ['required', 'string', 'max:50'],
             'email' => ['required', 'email', 'max:150', 'unique:users,email'],
             'contact_number' => ['nullable', 'string', 'max:20'],
             'address_label' => ['nullable', 'string', 'max:50'],
@@ -50,7 +51,8 @@ class UserController extends Controller
         DB::transaction(function () use ($validated, $request) {
             $user = User::create([
                 'role_id' => (int) $validated['role_id'],
-                'full_name' => $validated['full_name'],
+                'first_name' => $validated['first_name'],
+                'last_name' => $validated['last_name'],
                 'email' => $validated['email'],
                 'contact_number' => $validated['contact_number'] ?? null,
                 'password_hash' => Hash::make($validated['password']),
@@ -79,7 +81,8 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'role_id' => ['required', 'integer', 'exists:roles,role_id'],
-            'full_name' => ['required', 'string', 'max:100'],
+            'first_name' => ['required', 'string', 'max:50'],
+            'last_name' => ['required', 'string', 'max:50'],
             'email' => [
                 'required',
                 'email',
@@ -100,7 +103,8 @@ class UserController extends Controller
 
         $payload = [
             'role_id' => (int) $validated['role_id'],
-            'full_name' => $validated['full_name'],
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'],
             'email' => $validated['email'],
             'contact_number' => $validated['contact_number'] ?? null,
             'is_active' => $request->boolean('is_active'),

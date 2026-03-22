@@ -29,8 +29,13 @@ class ProductController extends Controller
                 ->count(),
         ];
 
+        $categories = Category::orderBy('name')->get(['category_id', 'name']);
+        $brands = Brand::orderBy('name')->get(['brand_id', 'name']);
+
         return $dataTable->render('admin.product.index', [
             'metrics' => $metrics,
+            'categories' => $categories,
+            'brands' => $brands,
         ]);
     }
 

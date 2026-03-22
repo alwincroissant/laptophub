@@ -23,7 +23,8 @@ class AdminAccountController extends Controller
 
         $data = $request->validate([
             'profile_image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
-            'full_name' => ['required', 'string', 'max:100'],
+            'first_name' => ['required', 'string', 'max:50'],
+            'last_name' => ['required', 'string', 'max:50'],
             'email' => [
                 'required',
                 'email',

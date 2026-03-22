@@ -38,7 +38,7 @@ class AdminOrderController extends Controller
                 'orders.status_id',
                 'orders.placed_at',
                 'orders.updated_at',
-                'users.full_name as customer_name',
+                DB::raw("TRIM(CONCAT(users.first_name, ' ', users.last_name)) as customer_name"),
                 'users.email as customer_email',
                 'order_statuses.status_name',
                 'payment_methods.method_name as payment_method',
@@ -50,7 +50,8 @@ class AdminOrderController extends Controller
                 'orders.status_id',
                 'orders.placed_at',
                 'orders.updated_at',
-                'users.full_name',
+                'users.first_name',
+                'users.last_name',
                 'users.email',
                 'order_statuses.status_name',
                 'payment_methods.method_name',
@@ -62,7 +63,7 @@ class AdminOrderController extends Controller
 
         if ($search !== '') {
             $ordersQuery->where(function ($query) use ($search) {
-                $query->where('users.full_name', 'like', "%{$search}%")
+                $query->where(DB::raw("CONCAT(users.first_name, ' ', users.last_name)"), 'like', "%{$search}%")
                     ->orWhere('users.email', 'like', "%{$search}%")
                     ->orWhere('orders.order_id', 'like', "%{$search}%");
             });

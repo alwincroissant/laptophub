@@ -799,15 +799,27 @@
               <div class="field-error">{{ $message }}</div>
             @enderror
           </div>
-          <div class="mb-3">
-            <label class="form-label" for="reg-name">Full Name</label>
-            <div class="input-icon">
-              <input type="text" id="reg-name" name="full_name" class="form-control" placeholder="Maria Santos" value="{{ old('full_name') }}"/>
-              <i class="bi bi-person"></i>
+          <div class="mb-3 row g-2">
+            <div class="col-6">
+              <label class="form-label" for="reg-fname">First Name</label>
+              <div class="input-icon">
+                <input type="text" id="reg-fname" name="first_name" class="form-control" placeholder="Maria" value="{{ old('first_name') }}"/>
+                <i class="bi bi-person"></i>
+              </div>
+              @error('first_name', 'register')
+                <div class="field-error">{{ $message }}</div>
+              @enderror
             </div>
-            @error('full_name', 'register')
-              <div class="field-error">{{ $message }}</div>
-            @enderror
+            <div class="col-6">
+              <label class="form-label" for="reg-lname">Last Name</label>
+              <div class="input-icon">
+                <input type="text" id="reg-lname" name="last_name" class="form-control" placeholder="Santos" value="{{ old('last_name') }}"/>
+                <i class="bi bi-person"></i>
+              </div>
+              @error('last_name', 'register')
+                <div class="field-error">{{ $message }}</div>
+              @enderror
+            </div>
           </div>
           <div class="mb-3">
             <label class="form-label" for="reg-email">Email Address</label>

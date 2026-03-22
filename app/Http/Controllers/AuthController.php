@@ -49,7 +49,8 @@ class AuthController extends Controller
     public function register(Request $request): RedirectResponse
     {
         $data = $request->validateWithBag('register', [
-            'full_name' => ['required', 'string', 'max:100'],
+            'first_name' => ['required', 'string', 'max:50'],
+            'last_name' => ['required', 'string', 'max:50'],
             'email' => ['required', 'email', 'max:150', 'unique:users,email'],
             'contact_number' => ['nullable', 'string', 'max:20'],
             'password' => ['required', 'string', 'min:8'],
@@ -63,7 +64,7 @@ class AuthController extends Controller
         if (! $customerRoleId) {
             return back()
                 ->withErrors(['email' => 'No role found. Please seed roles first.'], 'register')
-                ->withInput($request->only('full_name', 'email', 'contact_number', 'terms'));
+                ->withInput($request->only('first_name', 'last_name', 'email', 'contact_number', 'terms'));
         }
 
         $profileImageUrl = null;
@@ -73,7 +74,8 @@ class AuthController extends Controller
 
         $user = User::create([
             'role_id' => $customerRoleId,
-            'full_name' => $data['full_name'],
+            'first_name' => $data['first_name'],
+            'last_name' => $data['last_name'],
             'email' => $data['email'],
             'password_hash' => Hash::make($data['password']),
             'contact_number' => $data['contact_number'] ?? null,

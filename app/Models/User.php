@@ -25,7 +25,8 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $fillable = [
         'role_id',
-        'full_name',
+        'first_name',
+        'last_name',
         'email',
         'password_hash',
         'contact_number',
@@ -60,6 +61,15 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getAuthPassword(): string
     {
         return $this->password_hash;
+    }
+
+    /**
+     * Get the user's combined full name intelligently.
+     * Keeps legacy blade views intact securely.
+     */
+    public function getFullNameAttribute(): string
+    {
+        return trim("{$this->first_name} {$this->last_name}");
     }
 
     /**

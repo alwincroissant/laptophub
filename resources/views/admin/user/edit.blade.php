@@ -36,8 +36,13 @@
                 @method('PUT')
 
                 <div class="col-md-6">
-                    <label class="form-label" for="full_name">Full Name</label>
-                    <input id="full_name" name="full_name" type="text" class="form-control" value="{{ old('full_name', $user->full_name) }}" required>
+                    <label class="form-label" for="first_name">First Name</label>
+                    <input id="first_name" name="first_name" type="text" class="form-control" value="{{ old('first_name', $user->first_name) }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label" for="last_name">Last Name</label>
+                    <input id="last_name" name="last_name" type="text" class="form-control" value="{{ old('last_name', $user->last_name) }}" required>
                 </div>
 
                 <div class="col-md-6">

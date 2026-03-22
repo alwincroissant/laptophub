@@ -61,11 +61,11 @@
 
                 // Bind events for precise column filtering via AJAX
                 statusFilter.on('change', function() {
-                    table.column(5).search($(this).val()).draw();
+                    table.column(6).search($(this).val()).draw();
                 });
 
                 roleFilter.on('change', function() {
-                    table.column(3).search($(this).val()).draw();
+                    table.column(4).search($(this).val()).draw();
                 });
             }, 300);
         });

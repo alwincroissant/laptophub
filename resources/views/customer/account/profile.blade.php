@@ -291,9 +291,14 @@
         <div class="panel-head"><i class="bi bi-person-lines-fill"></i>Profile Details</div>
         <div class="panel-body">
             <div class="mb-3">
-              <label class="form-label">Full Name</label>
-              <input type="text" name="full_name" class="form-control @error('full_name') is-invalid @enderror" value="{{ old('full_name', auth()->user()->full_name) }}" required>
-              @error('full_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+              <label class="form-label">First Name</label>
+              <input type="text" name="first_name" class="form-control @error('first_name') is-invalid @enderror" value="{{ old('first_name', auth()->user()->first_name) }}" required>
+              @error('first_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Last Name</label>
+              <input type="text" name="last_name" class="form-control @error('last_name') is-invalid @enderror" value="{{ old('last_name', auth()->user()->last_name) }}" required>
+              @error('last_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div class="mb-3">
               <label class="form-label">Email</label>

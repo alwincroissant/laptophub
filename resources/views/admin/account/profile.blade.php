@@ -49,10 +49,15 @@
                                     @error('profile_image')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
                             </div>
-                            <div class="col-12 mt-3">
-                                <label for="full_name" class="form-label">Full Name</label>
-                                <input id="full_name" name="full_name" type="text" class="form-control @error('full_name') is-invalid @enderror" value="{{ old('full_name', $user->full_name) }}" required>
-                                @error('full_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <div class="col-12 col-md-6 mt-3">
+                                <label for="first_name" class="form-label">First Name</label>
+                                <input id="first_name" name="first_name" type="text" class="form-control @error('first_name') is-invalid @enderror" value="{{ old('first_name', $user->first_name) }}" required>
+                                @error('first_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-12 col-md-6 mt-3">
+                                <label for="last_name" class="form-label">Last Name</label>
+                                <input id="last_name" name="last_name" type="text" class="form-control @error('last_name') is-invalid @enderror" value="{{ old('last_name', $user->last_name) }}" required>
+                                @error('last_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-12 col-md-6">
                                 <label for="email" class="form-label">Email</label>
