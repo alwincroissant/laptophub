@@ -18,7 +18,7 @@ class CategorySeeder extends Seeder
             ['name' => 'Storage (SSD/HDD)', 'description' => 'Internal storage drives and replacements.'],
             ['name' => 'Laptop Batteries', 'description' => 'Replacement batteries for supported laptop models.'],
             ['name' => 'Chargers & Adapters', 'description' => 'Power adapters and charging accessories.'],
-            ['name' => 'Cooling Pads', 'description' => 'Laptop cooling accessories and thermal support.'],
+            ['name' => 'Accessories', 'description' => 'Miscellaneous laptop accessories and peripherals.'],
         ];
 
         foreach ($categories as $category) {
