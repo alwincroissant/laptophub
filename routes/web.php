@@ -171,6 +171,7 @@ Route::middleware(['auth.admin', 'active', 'admin'])->prefix('admin')->name('adm
     Route::patch('/products/{productId}/restore', [ProductController::class, 'restore'])->name('product.restore');
     Route::delete('/products/{productId}/force', [ProductController::class, 'forceDestroy'])->name('product.force-destroy');
     Route::post('/products/import', [ProductController::class, 'import'])->name('product.import');
+    Route::post('/products/images/import', [ProductController::class, 'importImages'])->name('product.images.import');
 
     Route::get('/categories', [CategoryController::class, 'index'])->name('category.index');
     Route::get('/categories/create', [CategoryController::class, 'create'])->name('category.create');

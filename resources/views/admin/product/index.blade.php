@@ -60,7 +60,19 @@
             <form method="POST" enctype="multipart/form-data" action="{{ route('admin.product.import') }}" class="d-flex gap-2">
                 @csrf
                 <input type="file" name="item_upload" class="form-control" accept=".xlsx,.xls,.csv" required>
-                <button type="submit" class="btn btn-info text-white text-nowrap"><i class="bi bi-file-earmark-excel me-1"></i>Import Excel File</button>
+                <button type="submit" class="btn btn-info text-white text-nowrap"><i class="bi bi-file-earmark-excel me-1"></i>Import Products</button>
+            </form>
+        </div>
+
+        <div class="filter-card mb-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h5 class="mb-0">Product Images Import</h5>
+                <small class="text-muted">Upload an Excel file to bulk import product images</small>
+            </div>
+            <form method="POST" enctype="multipart/form-data" action="{{ route('admin.product.images.import') }}" class="d-flex gap-2">
+                @csrf
+                <input type="file" name="images_upload" class="form-control" accept=".xlsx,.xls,.csv" required>
+                <button type="submit" class="btn btn-primary text-white text-nowrap"><i class="bi bi-images me-1"></i>Import Images</button>
             </form>
         </div>
 

@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\ProductImport;
-
+use App\Imports\ProductImageImport;
 class ProductController extends Controller
 {
     /**
@@ -271,5 +271,19 @@ class ProductController extends Controller
         );
 
         return redirect()->back()->with('success', 'Excel file imported successfully.');
+    }
+
+    public function importImages(Request $request)
+    {
+        $request->validate([
+            'images_upload' => 'required|mimes:xlsx,xls,csv'
+        ]);
+
+        Excel::import(
+            new ProductImageImport,
+            $request->file('images_upload')
+        );
+
+        return redirect()->back()->with('success', 'Product images imported successfully.');
     }
 }
