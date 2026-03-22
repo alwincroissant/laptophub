@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\DataTables\OrdersDataTable;
 use App\Models\Order;
 use App\Models\OrderStatus;
 use App\Models\OrderStatusLog;
@@ -12,9 +13,10 @@ use App\Mail\OrderStatusUpdated;
 
 class AdminOrderController extends Controller
 {
-    public function index(Request $request)
+    public function index(OrdersDataTable $dataTable, Request $request)
     {
-        $search = trim((string) $request->input('search', ''));
+        $searchParam = $request->input('search');
+        $search = is_array($searchParam) ? ($searchParam['value'] ?? '') : trim((string) $searchParam);
         $statusId = (int) $request->input('status_id', 0);
 
         $statuses = OrderStatus::orderBy('status_id')->get(['status_id', 'status_name']);
@@ -28,54 +30,7 @@ class AdminOrderController extends Controller
             'cancelled' => Order::where('status_id', $this->statusIdByName($statuses, 'Cancelled'))->count(),
         ];
 
-        $ordersQuery = Order::query()
-            ->leftJoin('users', 'orders.user_id', '=', 'users.user_id')
-            ->leftJoin('order_statuses', 'orders.status_id', '=', 'order_statuses.status_id')
-            ->leftJoin('payment_methods', 'orders.payment_method_id', '=', 'payment_methods.payment_method_id')
-            ->leftJoin('order_items', 'orders.order_id', '=', 'order_items.order_id')
-            ->select([
-                'orders.order_id',
-                'orders.status_id',
-                'orders.placed_at',
-                'orders.updated_at',
-                DB::raw("TRIM(CONCAT(users.first_name, ' ', users.last_name)) as customer_name"),
-                'users.email as customer_email',
-                'order_statuses.status_name',
-                'payment_methods.method_name as payment_method',
-                DB::raw('COALESCE(SUM(order_items.quantity), 0) as item_count'),
-                DB::raw('COALESCE(SUM(order_items.quantity * order_items.unit_price), 0) as subtotal'),
-            ])
-            ->groupBy([
-                'orders.order_id',
-                'orders.status_id',
-                'orders.placed_at',
-                'orders.updated_at',
-                'users.first_name',
-                'users.last_name',
-                'users.email',
-                'order_statuses.status_name',
-                'payment_methods.method_name',
-            ]);
-
-        if ($statusId > 0) {
-            $ordersQuery->where('orders.status_id', $statusId);
-        }
-
-        if ($search !== '') {
-            $ordersQuery->where(function ($query) use ($search) {
-                $query->where(DB::raw("CONCAT(users.first_name, ' ', users.last_name)"), 'like', "%{$search}%")
-                    ->orWhere('users.email', 'like', "%{$search}%")
-                    ->orWhere('orders.order_id', 'like', "%{$search}%");
-            });
-        }
-
-        $orders = $ordersQuery
-            ->orderByDesc('orders.placed_at')
-            ->paginate(12)
-            ->withQueryString();
-
-        return view('admin.order.index', [
-            'orders' => $orders,
+        return $dataTable->render('admin.order.index', [
             'statuses' => $statuses,
             'statusId' => $statusId,
             'search' => $search,

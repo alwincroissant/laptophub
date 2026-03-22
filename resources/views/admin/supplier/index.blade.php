@@ -7,6 +7,7 @@
 
 @section('admin_styles')
     <link href="{{ asset('css/admin-product-index.css') }}" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css"/>
 @endsection
 
 @section('topbar_actions')
@@ -19,112 +20,40 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <div class="filter-card mb-3">
-        <form method="GET" action="{{ route('admin.supplier.index') }}" class="row g-2 align-items-end">
-            <div class="col-12 col-md-7">
-                <label class="form-label">Search</label>
-                <input type="text" name="search" value="{{ $search }}" class="form-control" placeholder="Supplier name, contact, email, phone">
-            </div>
-            <div class="col-12 col-md-3">
-                <label class="form-label">Status</label>
-                <select name="status" class="form-select">
-                    <option value="all" {{ $status === 'all' ? 'selected' : '' }}>All</option>
-                    <option value="active" {{ $status === 'active' ? 'selected' : '' }}>Active</option>
-                    <option value="inactive" {{ $status === 'inactive' ? 'selected' : '' }}>Inactive</option>
-                    <option value="trashed" {{ $status === 'trashed' ? 'selected' : '' }}>Trashed</option>
-                </select>
-            </div>
-            <div class="col-12 col-md-2 d-flex gap-2">
-                <button class="btn btn-dark w-100" type="submit">Apply</button>
-            </div>
-        </form>
-    </div>
-
-    <div class="table-card">
+    <div class="table-card mt-3">
         <div class="card-header">
             <h5>Supplier List</h5>
-            <span class="text-muted" style="font-size:.78rem">{{ number_format($suppliers->total()) }} total results</span>
         </div>
         <div class="table-responsive">
-            <table class="table mb-0">
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Contact Person</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th class="text-end">Products</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                @forelse ($suppliers as $supplier)
-                    <tr>
-                        <td>#{{ $supplier->supplier_id }}</td>
-                        <td>{{ $supplier->name }}</td>
-                        <td>{{ $supplier->contact_name ?: '-' }}</td>
-                        <td>{{ $supplier->contact_email ?: '-' }}</td>
-                        <td>{{ $supplier->contact_phone ?: '-' }}</td>
-                        <td class="text-end">{{ number_format((int) $supplier->products_count) }}</td>
-                        <td>
-                            @if ($supplier->deleted_at)
-                                <span class="status-badge badge-archived">Trashed</span>
-                            @elseif ($supplier->is_active)
-                                <span class="status-badge badge-active">Active</span>
-                            @else
-                                <span class="status-badge badge-low">Inactive</span>
-                            @endif
-                        </td>
-                        <td>
-                            <div class="d-flex gap-2">
-                                @if ($supplier->deleted_at)
-                                    <form method="POST" action="{{ route('admin.supplier.restore', $supplier->supplier_id) }}" onsubmit="return confirm('Recover this supplier?')">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" class="btn btn-sm btn-outline-success" title="Recover" aria-label="Recover">
-                                            <i class="bi bi-arrow-counterclockwise"></i>
-                                        </button>
-                                    </form>
-                                @else
-                                    <a href="{{ route('admin.supplier.show', $supplier) }}" class="btn btn-sm btn-outline-info" title="View Details" aria-label="View Details">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    <a href="{{ route('admin.supplier.edit', $supplier) }}" class="btn btn-sm btn-outline-primary" title="Edit" aria-label="Edit">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
-                                    <form method="POST" action="{{ route('admin.supplier.destroy', $supplier) }}" onsubmit="return confirm('Soft delete this supplier?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-warning" title="Soft Delete" aria-label="Soft Delete">
-                                            <i class="bi bi-archive"></i>
-                                        </button>
-                                    </form>
-                                @endif
-                                <form method="POST" action="{{ route('admin.supplier.force-destroy', $supplier->supplier_id) }}" onsubmit="return confirm('Delete permanently?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete" aria-label="Delete">
-                                        <i class="bi bi-trash3"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="8" class="empty-state">No suppliers found.</td>
-                    </tr>
-                @endforelse
-                </tbody>
-            </table>
+            {!! $dataTable->table(['class' => 'table table-hover mb-0 align-middle w-100', 'id' => 'suppliersTable']) !!}
         </div>
-
-        @if ($suppliers->hasPages())
-            <div class="pagination-wrap">
-                {{ $suppliers->links() }}
-            </div>
-        @endif
     </div>
+
+@push('scripts')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+    <script src="{{ asset('vendor/datatables/buttons.server-side.js') }}"></script>
+    {!! $dataTable->scripts() !!}
+    <script>
+        $(document).ready(function() {
+            var statusFilter = $('<select class="form-select form-select-sm ms-2 d-inline-block w-auto"><option value="all">All</option><option value="active">Active</option><option value="inactive">Inactive</option><option value="trashed">Trashed</option></select>');
+            
+            var currentStatus = '{{ $status }}';
+            statusFilter.val(currentStatus);
+
+            setTimeout(function() {
+                $('.dataTables_filter').addClass('d-flex justify-content-end align-items-center mb-3');
+                $('.dataTables_filter label').addClass('mb-0 me-2');
+                $('.dataTables_filter').append(statusFilter);
+
+                var table = window.LaravelDataTables["suppliersTable"];
+
+                statusFilter.on('change', function() {
+                    window.location.href = "{{ route('admin.supplier.index') }}?status=" + $(this).val();
+                });
+            }, 300);
+        });
+    </script>
+@endpush
 @endsection

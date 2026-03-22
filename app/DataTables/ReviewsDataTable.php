@@ -64,6 +64,13 @@ class ReviewsDataTable extends DataTable
                     $query->where('reviews.is_visible', false);
                 }
             })
+            ->filterColumn('user.full_name', function($query, $keyword) {
+                $query->whereHas('user', function($q) use($keyword) {
+                    $q->where('first_name', 'like', "%{$keyword}%")
+                      ->orWhere('last_name', 'like', "%{$keyword}%")
+                      ->orWhereRaw("CONCAT(first_name, ' ', last_name) like ?", ["%{$keyword}%"]);
+                });
+            })
             ->rawColumns(['title', 'product.name', 'user.full_name', 'orderItem.order_id', 'rating', 'is_visible', 'action'])
             ->setRowId('review_id');
     }
@@ -72,7 +79,7 @@ class ReviewsDataTable extends DataTable
     {
         return $model->newQuery()
             ->with([
-                'user:user_id,full_name,email',
+                'user:user_id,first_name,last_name,email',
                 'product:product_id,name',
                 'orderItem:order_item_id,order_id',
                 'orderItem.order:order_id,placed_at',

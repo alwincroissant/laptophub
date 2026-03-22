@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\DataTables\InventoryDataTable;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
@@ -9,10 +10,9 @@ use Illuminate\Http\Request;
 
 class InventoryController extends Controller
 {
-    public function index(Request $request)
+    public function index(InventoryDataTable $dataTable)
     {
-        $search = trim((string) $request->input('search', ''));
-        $status = (string) $request->input('status', 'all');
+        $status = (string) request('status', 'all');
 
         $metrics = [
             'total' => Product::count(),
@@ -24,52 +24,8 @@ class InventoryController extends Controller
             'outOfStock' => Product::where('is_archived', false)->where('stock_qty', 0)->count(),
         ];
 
-        $query = Product::query()
-            ->leftJoin('categories', 'products.category_id', '=', 'categories.category_id')
-            ->leftJoin('brands', 'products.brand_id', '=', 'brands.brand_id')
-            ->select([
-                'products.product_id',
-                'products.name',
-                'products.image_url',
-                'products.stock_qty',
-                'products.low_stock_threshold',
-                'products.price',
-                'products.is_archived',
-                'products.updated_at',
-                'categories.name as category_name',
-                'brands.name as brand_name',
-            ]);
-
-        if ($search !== '') {
-            $query->where(function ($subQuery) use ($search) {
-                $subQuery->where('products.name', 'like', "%{$search}%")
-                    ->orWhere('categories.name', 'like', "%{$search}%")
-                    ->orWhere('brands.name', 'like', "%{$search}%");
-            });
-        }
-
-        if ($status === 'low-stock') {
-            $query->where('products.is_archived', false)
-                ->whereColumn('products.stock_qty', '<=', 'products.low_stock_threshold')
-                ->where('products.stock_qty', '>', 0);
-        } elseif ($status === 'out-of-stock') {
-            $query->where('products.is_archived', false)
-                ->where('products.stock_qty', 0);
-        } elseif ($status === 'archived') {
-            $query->where('products.is_archived', true);
-        } elseif ($status === 'active') {
-            $query->where('products.is_archived', false);
-        }
-
-        $items = $query
-            ->orderByDesc('products.updated_at')
-            ->paginate(12)
-            ->withQueryString();
-
-        return view('admin.inventory.index', [
-            'items' => $items,
+        return $dataTable->render('admin.inventory.index', [
             'metrics' => $metrics,
-            'search' => $search,
             'status' => $status,
         ]);
     }

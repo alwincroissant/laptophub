@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\DataTables\SuppliersDataTable;
 use App\Models\Product;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
@@ -10,43 +11,10 @@ use Illuminate\Validation\Rule;
 
 class SupplierController extends Controller
 {
-    public function index(Request $request)
+    public function index(SuppliersDataTable $dataTable)
     {
-        $search = trim((string) $request->input('search', ''));
-        $status = (string) $request->input('status', 'all');
-
-        $query = Supplier::query();
-
-        if ($status === 'trashed') {
-            $query->onlyTrashed();
-        }
-
-        if ($search !== '') {
-            $query->where(function ($subQuery) use ($search) {
-                $subQuery->where('name', 'like', "%{$search}%")
-                    ->orWhere('contact_name', 'like', "%{$search}%")
-                    ->orWhere('contact_email', 'like', "%{$search}%")
-                    ->orWhere('contact_phone', 'like', "%{$search}%");
-            });
-        }
-
-        if ($status === 'active') {
-            $query->where('is_active', true);
-        } elseif ($status === 'inactive') {
-            $query->where('is_active', false);
-        }
-
-        $suppliers = $query
-            ->withCount('products')
-            ->orderBy('name')
-            ->paginate(12)
-            ->withQueryString();
-
-        return view('admin.supplier.index', [
-            'suppliers' => $suppliers,
-            'search' => $search,
-            'status' => $status,
-        ]);
+        $status = (string) request('status', 'all');
+        return $dataTable->render('admin.supplier.index', compact('status'));
     }
 
     public function create()

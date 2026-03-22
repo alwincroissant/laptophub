@@ -7,6 +7,7 @@
 
 @section('admin_styles')
     <link href="{{ asset('css/admin-product-index.css') }}" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css"/>
 @endsection
 
 @section('topbar_actions')
@@ -136,91 +137,23 @@
                 </form>
             </div>
 
-            <div class="table-card">
+            <div class="table-card mt-3">
                 <div class="card-header border-bottom">
                     <h5 class="mb-0">Restock History</h5>
-                    <span class="text-muted" style="font-size:.78rem">Viewing {{ $restocks->count() }} of {{ number_format($restocks->total()) }} total logs</span>
                 </div>
                 <div class="table-responsive">
-                    <table class="table mb-0 align-middle">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Type</th>
-                                <th>Product</th>
-                                <th>Supplier</th>
-                                <th>Restocked By</th>
-                                <th class="text-end">Qty</th>
-                                <th class="text-end">Unit Cost</th>
-                                <th class="text-end">Total Cost</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($restocks as $restock)
-                                <tr>
-                                    <td>{{ $restock->restocked_at->format('M d, Y') }}<br><span class="text-muted" style="font-size:.75rem">{{ $restock->restocked_at->format('h:i A') }}</span></td>
-                                    <td>
-                                        @if($restock->transaction_type === 'add')
-                                            <span class="badge bg-success">➕ Add</span>
-                                        @elseif($restock->transaction_type === 'adjust')
-                                            <span class="badge bg-warning text-dark">⚖️ Adjust</span>
-                                        @elseif($restock->transaction_type === 'remove')
-                                            <span class="badge bg-danger">➖ Remove</span>
-                                        @else
-                                            <span class="badge bg-secondary">{{ $restock->transaction_type }}</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        <strong>{{ optional($restock->product)->name ?? 'Unknown' }}</strong>
-                                        @if($restock->notes)
-                                            <div class="text-muted" style="font-size:.75rem; max-width: 15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $restock->notes }}">{{ $restock->notes }}</div>
-                                        @endif
-                                    </td>
-                                    <td>{{ optional($restock->supplier)->name ?? 'Unknown' }}</td>
-                                    <td>
-                                        <div class="d-flex align-items-center gap-2">
-                                            @if(optional($restock->manager)->profile_image_url)
-                                                <img src="{{ Storage::url($restock->manager->profile_image_url) }}" class="rounded-circle" style="width:24px;height:24px;object-fit:cover;">
-                                            @else
-                                                <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width:24px;height:24px;font-size:.6rem;">
-                                                    {{ substr(optional($restock->manager)->full_name ?? '?', 0, 1) }}
-                                                </div>
-                                            @endif
-                                            {{ optional($restock->manager)->full_name ?? 'Unknown' }}
-                                        </div>
-                                    </td>
-                                    <td class="text-end">
-                                        @if($restock->quantity_added < 0)
-                                            <span class="badge bg-danger" style="font-size:.8rem;">{{ $restock->quantity_added }}</span>
-                                        @else
-                                            <span class="badge bg-success" style="font-size:.8rem;">+{{ $restock->quantity_added }}</span>
-                                        @endif
-                                    </td>
-                                    <td class="text-end text-muted">₱{{ number_format($restock->unit_cost, 2) }}</td>
-                                    <td class="text-end fw-bold {{ $restock->quantity_added < 0 ? 'text-danger' : 'text-success' }}">
-                                        @if($restock->quantity_added < 0)
-                                            (₱{{ number_format(abs($restock->unit_cost * $restock->quantity_added), 2) }})
-                                        @else
-                                            ₱{{ number_format($restock->unit_cost * $restock->quantity_added, 2) }}
-                                        @endif
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="8" class="empty-state text-center py-5 text-muted">No restocking logs found.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                    {!! $dataTable->table(['class' => 'table table-hover mb-0 align-middle w-100', 'id' => 'restocksTable']) !!}
                 </div>
-
-                @if($restocks->hasPages())
-                    <div class="pagination-wrap">
-                        {{ $restocks->links() }}
-                    </div>
-                @endif
             </div>
         </div>
     </div>
+
+@push('scripts')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+    <script src="{{ asset('vendor/datatables/buttons.server-side.js') }}"></script>
+    {!! $dataTable->scripts() !!}
+@endpush
 @endsection
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\DataTables\RestocksDataTable;
 use App\Models\Product;
 use App\Models\Supplier;
 use App\Models\SupplierProduct;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 
 class RestockTransactionController extends Controller
 {
-    public function index(Request $request)
+    public function index(RestocksDataTable $dataTable, Request $request)
     {
         $suppliers = Supplier::orderBy('name')->get(['supplier_id', 'name']);
         
@@ -30,27 +31,7 @@ class RestockTransactionController extends Controller
             $products = Product::orderBy('name')->get(['product_id', 'name', 'stock_qty']);
         }
 
-        $baseQuery = RestockTransaction::query();
-
-        if ($request->filled('start_date')) {
-            $baseQuery->whereDate('restocked_at', '>=', $request->start_date);
-        }
-        if ($request->filled('end_date')) {
-            $baseQuery->whereDate('restocked_at', '<=', $request->end_date);
-        }
-        if ($request->filled('product_id')) {
-            $baseQuery->where('restock_transactions.product_id', $request->product_id);
-        }
-        if ($request->filled('supplier_id')) {
-            $baseQuery->where('restock_transactions.supplier_id', $request->supplier_id);
-        }
-
-        $restocks = (clone $baseQuery)->with(['product', 'supplier', 'manager'])
-            ->orderByDesc('restocked_at')
-            ->paginate(15)
-            ->withQueryString();
-
-        return view('admin.restock.index', compact('products', 'suppliers', 'restocks', 'selectedSupplierId'));
+        return $dataTable->render('admin.restock.index', compact('products', 'suppliers', 'selectedSupplierId'));
     }
 
     public function store(Request $request)

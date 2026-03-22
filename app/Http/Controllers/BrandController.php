@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\DataTables\BrandsDataTable;
 use App\Models\Brand;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -11,28 +12,10 @@ class BrandController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(BrandsDataTable $dataTable)
     {
-        $search = trim((string) request('search', ''));
-        $status = (string) request('status', 'all');
-
-        $query = Brand::query();
-
-        if ($status === 'trashed') {
-            $query->onlyTrashed();
-        } elseif ($status === 'active') {
-            $query->where('is_active', 1);
-        } elseif ($status === 'inactive') {
-            $query->where('is_active', 0);
-        }
-
-        if ($search !== '') {
-            $query->where('name', 'like', "%{$search}%");
-        }
-
-        $brands = $query->orderByDesc('brand_id')->paginate(12)->withQueryString();
-
-        return view('admin.brand.index', compact('brands', 'search', 'status'));
+        $status = request('status', 'all');
+        return $dataTable->render('admin.brand.index', compact('status'));
     }
 
     /**
