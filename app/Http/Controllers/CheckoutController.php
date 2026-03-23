@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderPlaced;
-
+use App\Models\User;
 class CheckoutController extends Controller
 {
     /**
