@@ -18,7 +18,10 @@ class AdminDashboardController extends Controller
     {
         $totalOrders = Order::count();
         $grossRevenue = (float) OrderItem::query()
-            ->selectRaw('COALESCE(SUM(quantity * unit_price), 0) as total')
+            ->join('orders', 'order_items.order_id', '=', 'orders.order_id')
+            ->join('order_statuses', 'orders.status_id', '=', 'order_statuses.status_id')
+            ->where('order_statuses.status_name', 'Delivered')
+            ->selectRaw('COALESCE(SUM(order_items.quantity * order_items.unit_price), 0) as total')
             ->value('total');
 
         $restockExpense = (float) RestockTransaction::query()
