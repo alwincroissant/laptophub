@@ -17,7 +17,7 @@ class ProductSeeder extends Seeder
         
         $manager = DB::table('users')
             ->join('roles', 'users.role_id', '=', 'roles.role_id')
-            ->whereIn('roles.role_name', ['Admin', 'Manager'])
+            ->whereIn('roles.role_name', ['Admin', 'InventoryManager'])
             ->select('users.user_id')
             ->first();
             

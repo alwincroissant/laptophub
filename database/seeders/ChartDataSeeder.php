@@ -30,6 +30,10 @@ class ChartDataSeeder extends Seeder
             $q->where('role_name', 'Customer');
         })->get();
 
+        $staffUser = User::whereHas('role', function($q) {
+            $q->whereIn('role_name', ['Admin', 'InventoryManager']);
+        })->first();
+
         if ($customerUsers->isEmpty()) {
             // fallback to users
             $customerUsers = clone User::all();
@@ -62,6 +66,20 @@ class ChartDataSeeder extends Seeder
             ]);
             $order->timestamps = false;
             $order->save();
+
+            // Determine who changed the status realistically
+            $isCustomerAction = in_array(strtolower($randomStatus->status_name), ['pending', 'cancelled']);
+            $staffId = $staffUser->user_id ?? ($staffUser->id ?? ($customerUser->user_id ?? $customerUser->id));
+            $changedBy = $isCustomerAction ? ($customerUser->user_id ?? $customerUser->id) : $staffId;
+
+            // Seed recent activity (OrderStatusLog)
+            \App\Models\OrderStatusLog::create([
+                'order_id' => $order->order_id ?? $order->id,
+                'status_id' => $randomStatus->status_id ?? $randomStatus->id,
+                'changed_by' => $changedBy,
+                'changed_at' => $randomDate,
+                'note' => 'Status seeded via ChartDataSeeder',
+            ]);
 
             $itemCount = rand(1, 4);
             $orderProducts = $products->random(min($itemCount, $products->count()));

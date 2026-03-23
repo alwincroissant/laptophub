@@ -12,7 +12,7 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         $adminRole = Role::where('role_name', 'Admin')->first();
-        $managerRole = Role::where('role_name', 'Manager')->first();
+        $managerRole = Role::where('role_name', 'InventoryManager')->first();
         $customerRole = Role::where('role_name', 'Customer')->first();
 
         $users = [];
@@ -33,9 +33,9 @@ class UserSeeder extends Seeder
         if ($managerRole) {
             $users[] = [
                 'role_id' => $managerRole->role_id,
-                'first_name' => 'Manager',
-                'last_name' => 'User',
-                'email' => 'manager@laptophub.com',
+                'first_name' => 'Inventory',
+                'last_name' => 'Manager',
+                'email' => 'inventory@laptophub.com',
                 'password_hash' => Hash::make('password'),
                 'contact_number' => '1234567891',
                 'is_active' => 1,
