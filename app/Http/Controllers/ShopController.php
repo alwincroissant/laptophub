@@ -122,7 +122,7 @@ class ShopController extends Controller
      */
     public function search(Request $request)
     {
-        $searchTerm = $request->get('q', '');
+        $searchTerm = $request->input('q', '');
 
         if ($request->filled('q')) {
             $query = Product::search($searchTerm);
@@ -164,7 +164,7 @@ class ShopController extends Controller
             'products' => $products,
             'brands' => $brands,
             'categories' => $categories,
-            'search' => (string) $request->get('q', ''),
+            'search' => (string) $request->input('q', ''),
             'selectedBrands' => [],
             'selectedCategories' => [],
             'selectedPrices' => [],

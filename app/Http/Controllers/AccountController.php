@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\UserAddress;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -242,7 +243,7 @@ class AccountController extends Controller
         $user->is_active = false;
         $user->save();
 
-        auth()->logout();
+        Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

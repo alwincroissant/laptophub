@@ -89,7 +89,7 @@ class OrderController extends Controller
 
         DB::transaction(function () use ($order, $cancelledStatus, $user) {
             $order->status_id = $cancelledStatus->status_id;
-            $order->updated_at = now();
+            $order->updated_at = \Illuminate\Support\Carbon::now();
             $order->save();
 
             OrderStatusLog::create([

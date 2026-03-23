@@ -52,10 +52,10 @@ class AdminAccountController extends Controller
 
         // Only update password if provided
         if (!empty($data['new_password'])) {
-            if (!\Illuminate\Support\Facades\Hash::check($data['current_password'] ?? '', $user->password_hash)) {
+            if (!Hash::check($data['current_password'] ?? '', $user->password_hash)) {
                 return redirect()->back()->withErrors(['current_password' => 'Current password is incorrect. Profile update failed.'])->withInput();
             }
-            $data['password_hash'] = \Illuminate\Support\Facades\Hash::make($data['new_password']);
+            $data['password_hash'] = Hash::make($data['new_password']);
         }
         unset($data['new_password'], $data['current_password']);
 
