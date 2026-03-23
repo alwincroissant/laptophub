@@ -46,10 +46,10 @@
                         
                         <div class="mb-3">
                             <label class="form-label" style="font-size:.85rem; font-weight:600;">Supplier <span class="text-danger">*</span></label>
-                            <select id="supplier_id" name="supplier_id" class="form-select" required onchange="window.location=this.value ? '{{ route('admin.restock.index') }}?supplier_id=' + this.value : '{{ route('admin.restock.index') }}'">
+                            <select id="supplier_id" name="supplier_id" class="form-select" required onchange="window.location=this.value ? '{{ route('admin.restock.index') }}?form_supplier_id=' + this.value : '{{ route('admin.restock.index') }}'">
                                 <option value="">Select a supplier...</option>
                                 @foreach($suppliers as $supplier)
-                                    <option value="{{ $supplier->supplier_id }}" {{ request('supplier_id') == $supplier->supplier_id ? 'selected' : '' }}>{{ $supplier->name }}</option>
+                                    <option value="{{ $supplier->supplier_id }}" {{ old('supplier_id', request('form_supplier_id')) == $supplier->supplier_id ? 'selected' : '' }}>{{ $supplier->name }}</option>
                                 @endforeach
                             </select>
                             <small class="text-muted d-block mt-1">Select a supplier first to filter available products.</small>

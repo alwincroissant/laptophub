@@ -16,7 +16,7 @@ class RestockTransactionController extends Controller
     {
         $suppliers = Supplier::orderBy('name')->get(['supplier_id', 'name']);
         
-        $selectedSupplierId = $request->input('supplier_id');
+        $selectedSupplierId = old('supplier_id', $request->input('form_supplier_id'));
         $products = [];
         
         if ($selectedSupplierId) {
