@@ -14,6 +14,14 @@ class ProductSeeder extends Seeder
     {
         $brandIds = DB::table('brands')->pluck('brand_id', 'name');
         $categoryIds = DB::table('categories')->pluck('category_id', 'name');
+        
+        $manager = DB::table('users')
+            ->join('roles', 'users.role_id', '=', 'roles.role_id')
+            ->whereIn('roles.role_name', ['Admin', 'Manager'])
+            ->select('users.user_id')
+            ->first();
+            
+        $managerId = $manager ? $manager->user_id : null;
 
         $products = [
             [
@@ -244,6 +252,31 @@ class ProductSeeder extends Seeder
                     'is_archived' => $product['is_archived'],
                 ]
             );
+
+            // Fetch IDs for restock log
+            $insertedProduct = DB::table('products')->where('name', $product['name'])->first();
+            $supplier = DB::table('suppliers')->where('name', $product['brand'] . ' Authorized Supplier')->first();
+
+            if ($insertedProduct && $supplier && $managerId && $product['stock_qty'] > 0) {
+                // Check if already seeded to avoid duplicates on re-run
+                $exists = DB::table('restock_transactions')
+                    ->where('product_id', $insertedProduct->product_id)
+                    ->where('notes', 'Initial stock seeding')
+                    ->exists();
+
+                if (!$exists) {
+                    DB::table('restock_transactions')->insert([
+                        'product_id' => $insertedProduct->product_id,
+                        'supplier_id' => $supplier->supplier_id,
+                        'managed_by' => $managerId,
+                        'quantity_added' => $product['stock_qty'],
+                        'unit_cost' => $product['price'] * 0.7,
+                        'transaction_type' => 'add',
+                        'notes' => 'Initial stock seeding',
+                        'restocked_at' => now(),
+                    ]);
+                }
+            }
         }
     }
 }
