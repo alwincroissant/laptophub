@@ -44,8 +44,9 @@
 
 
     <div class="table-card">
-        <div class="card-header">
-            <h5>Review List</h5>
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Review List</h5>
+            <div id="table-buttons"></div>
         </div>
         <div class="table-responsive">
             {!! $dataTable->table(['class' => 'table mb-0 table-hover align-middle w-100', 'id' => 'reviewsTable']) !!}
@@ -57,6 +58,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css"/>
 <style>
     /* Styling for the custom DataTables wrapper */
     .dataTables_wrapper .row {
@@ -90,6 +92,13 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
     <script src="{{ asset('vendor/datatables/buttons.server-side.js') }}"></script>
     {!! $dataTable->scripts() !!}
     <script>
@@ -103,6 +112,7 @@
                 $('.dataTables_filter').append(ratingFilter).append(visibilityFilter);
 
                 var table = window.LaravelDataTables["reviewsTable"];
+                table.buttons().container().appendTo('#table-buttons');
 
                 visibilityFilter.on('change', function() {
                     table.column(5).search($(this).val()).draw();

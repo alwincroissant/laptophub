@@ -67,6 +67,9 @@ class CategoriesDataTable extends DataTable
             ->orderBy(0, 'desc')
             ->selectStyleSingle()
             ->parameters([
+                'dom' => "<'d-none'B><'row align-items-center mb-3'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6 d-flex justify-content-end'f>>" .
+                         "<'row'<'col-sm-12'tr>>" .
+                         "<'row mt-2'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
                 'responsive' => true,
                 'autoWidth' => false,
                 'language' => [
