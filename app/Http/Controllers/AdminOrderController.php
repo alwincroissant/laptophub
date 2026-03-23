@@ -55,11 +55,9 @@ class AdminOrderController extends Controller
             $subtotal += (float) $item->unit_price * (int) $item->quantity;
         }
 
-        $settings = \App\Models\Setting::pluck('value', 'key');
-        $shippingFeeSetting = isset($settings['shipping_fee']) ? (float) $settings['shipping_fee'] : 0;
-        $taxRateSetting = isset($settings['tax_rate']) ? (float) $settings['tax_rate'] : 0;
+        $shipping = (float) ($order->shipping_fee ?? 0);
+        $taxRateSetting = (float) ($order->tax_rate ?? 0);
 
-        $shipping = $subtotal > 0 ? $shippingFeeSetting : 0;
         $taxAmount = $subtotal > 0 ? ($subtotal * ($taxRateSetting / 100)) : 0;
         $total = $subtotal + $shipping + $taxAmount;
 

@@ -192,7 +192,11 @@ class CheckoutController extends Controller
                 return $order;
             }, 3);
 
-            Mail::to($user->email, $user->full_name)->send(new OrderPlaced($order));
+            try {
+                Mail::to($user->email, $user->full_name)->send(new OrderPlaced($order));
+            } catch (\Throwable $mailError) {
+                \Log::error('Order placed but failed to send email: ' . $mailError->getMessage());
+            }
 
             return redirect()->route('customer.orders.show', $order->order_id)
                 ->with('success', 'Order placed successfully!');

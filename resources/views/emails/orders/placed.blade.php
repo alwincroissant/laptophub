@@ -3,6 +3,9 @@
 
 
 @php
+  $subtotal = $order->items->sum(function($item) {
+      return $item->unit_price * $item->quantity;
+  });
   $shipping = $order->shipping_fee ?? 0;
   $taxRate = $order->tax_rate ?? 0;
   $taxAmount = $subtotal * ($taxRate / 100);
