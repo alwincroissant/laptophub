@@ -20,7 +20,16 @@ class AdminDashboardController extends Controller
         $grossRevenue = (float) OrderItem::query()
             ->join('orders', 'order_items.order_id', '=', 'orders.order_id')
             ->join('order_statuses', 'orders.status_id', '=', 'order_statuses.status_id')
-            ->where('order_statuses.status_name', 'Delivered')
+            ->join('payment_methods', 'orders.payment_method_id', '=', 'payment_methods.payment_method_id')
+            ->where(function ($query) {
+                $query->where(function ($q) {
+                    $q->where('payment_methods.method_name', 'Cash on Delivery')
+                      ->where('order_statuses.status_name', 'Delivered');
+                })->orWhere(function ($q) {
+                    $q->where('payment_methods.method_name', 'Online Payment')
+                      ->whereNotIn('order_statuses.status_name', ['Pending', 'Cancelled']);
+                });
+            })
             ->selectRaw('COALESCE(SUM(order_items.quantity * order_items.unit_price), 0) as total')
             ->value('total');
 

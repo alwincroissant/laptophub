@@ -22,9 +22,9 @@ class ChartDataSeeder extends Seeder
             return;
         }
 
-        $paymentMethod = PaymentMethod::first();
-        if (!$paymentMethod) {
-            $paymentMethod = PaymentMethod::create(['method_name' => 'Cash']);
+        $paymentMethods = PaymentMethod::all();
+        if ($paymentMethods->isEmpty()) {
+            $paymentMethods = collect([PaymentMethod::create(['method_name' => 'Cash on Delivery'])]);
         }
         $customerUsers = User::whereHas('role', function($q) {
             $q->where('role_name', 'Customer');
@@ -55,11 +55,13 @@ class ChartDataSeeder extends Seeder
 
             $randomStatus = $orderStatuses->random();
 
+            $randomPaymentMethod = $paymentMethods->random();
+
             // Adjust created_at explicitly so it aligns
             $order = new Order([
                 'user_id' => $customerUser->user_id ?? $customerUser->id,
                 'status_id' => $randomStatus->status_id ?? $randomStatus->id,
-                'payment_method_id' => $paymentMethod->payment_method_id ?? $paymentMethod->id,
+                'payment_method_id' => $randomPaymentMethod->payment_method_id ?? $randomPaymentMethod->id,
                 'shipping_address' => '123 Fake Street, Seeder City',
                 'placed_at' => $randomDate,
                 'updated_at' => $randomDate,
