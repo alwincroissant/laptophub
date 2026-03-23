@@ -51,16 +51,12 @@ class OrderController extends Controller
 
         $order->load(['items.product', 'status', 'paymentMethod']);
 
-        $subtotal = (float) $order->items()
-            ->selectRaw('COALESCE(SUM(unit_price * quantity), 0) as subtotal')
-            ->value('subtotal');
-
-        $settings = \App\Models\Setting::pluck('value', 'key');
-        $shippingFeeSetting = isset($settings['shipping_fee']) ? (float) $settings['shipping_fee'] : 0;
-        $taxRateSetting = isset($settings['tax_rate']) ? (float) $settings['tax_rate'] : 0;
-
-        $shipping = $subtotal > 0 ? $shippingFeeSetting : 0;
-        $taxAmount = $subtotal > 0 ? ($subtotal * ($taxRateSetting / 100)) : 0;
+        $subtotal = $order->items->sum(function($item) {
+            return $item->unit_price * $item->quantity;
+        });
+        $shipping = $order->shipping_fee ?? 0;
+        $taxRateSetting = $order->tax_rate ?? 0;
+        $taxAmount = $subtotal * ($taxRateSetting / 100);
         $total = $subtotal + $shipping + $taxAmount;
 
         return view('customer.orders.show', compact('order', 'subtotal', 'shipping', 'taxAmount', 'taxRateSetting', 'total'));

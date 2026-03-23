@@ -29,10 +29,10 @@
                 <div class="d-flex justify-content-between mb-2"><span class="text-muted">Placed</span><span>{{ optional($order->placed_at)->format('M d, Y h:i A') ?? 'N/A' }}</span></div>
                 <div class="d-flex justify-content-between mb-2"><span class="text-muted">Payment</span><span>{{ $order->paymentMethod->method_name ?? 'N/A' }}</span></div>
                 <div class="d-flex justify-content-between mb-2"><span class="text-muted">Subtotal</span><strong>₱{{ number_format($subtotal, 2) }}</strong></div>
-                <div class="d-flex justify-content-between mb-2"><span class="text-muted">Shipping</span><strong>₱{{ number_format($shipping, 2) }}</strong></div>
-                <div class="d-flex justify-content-between mb-2"><span class="text-muted">Tax ({{ $taxRateSetting ?? 0 }}%)</span><strong>₱{{ number_format($taxAmount ?? 0, 2) }}</strong></div>
+                <div class="d-flex justify-content-between mb-2"><span class="text-muted">Shipping</span><strong>₱{{ number_format($order->shipping_fee ?? 0, 2) }}</strong></div>
+                <div class="d-flex justify-content-between mb-2"><span class="text-muted">Tax ({{ $order->tax_rate ?? 0 }}%)</span><strong>₱{{ number_format($subtotal * ($order->tax_rate / 100), 2) }}</strong></div>
                 <hr>
-                <div class="d-flex justify-content-between"><span>Total</span><strong>₱{{ number_format($total, 2) }}</strong></div>
+                <div class="d-flex justify-content-between"><span>Total</span><strong>₱{{ number_format($subtotal + ($order->shipping_fee ?? 0) + ($subtotal * ($order->tax_rate / 100)), 2) }}</strong></div>
             </div>
         </div>
 

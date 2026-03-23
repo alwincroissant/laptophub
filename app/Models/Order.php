@@ -15,6 +15,8 @@ class Order extends Model
         'payment_method_id',
         'status_id',
         'shipping_address',
+        'tax_rate',
+        'shipping_fee',
         'placed_at',
         'updated_at'
     ];

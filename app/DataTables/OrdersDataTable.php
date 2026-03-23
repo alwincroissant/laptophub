@@ -15,21 +15,21 @@ class OrdersDataTable extends DataTable
 {
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
-        $settings = \App\Models\Setting::pluck('value', 'key');
-        $shippingFeeSetting = isset($settings['shipping_fee']) ? (float) $settings['shipping_fee'] : 0;
-        $taxRateSetting = isset($settings['tax_rate']) ? (float) $settings['tax_rate'] : 0;
-
-        return (new EloquentDataTable($query))
+            // Eager load items for correct total calculation
+            return (new EloquentDataTable($query->with('items')))
             ->addColumn('action', function (Order $order) {
                 return view('admin.order.datatables_actions', compact('order'))->render();
             })
             ->addColumn('status_badge', function (Order $order) {
                 return view('admin.order.datatables_status', compact('order'))->render();
             })
-            ->editColumn('subtotal', function (Order $order) use ($shippingFeeSetting, $taxRateSetting) {
-                $subtotal = (float) $order->subtotal;
-                $shipping = $subtotal > 0 ? $shippingFeeSetting : 0;
-                $taxAmount = $subtotal > 0 ? ($subtotal * ($taxRateSetting / 100)) : 0;
+            ->editColumn('subtotal', function (Order $order) {
+                $subtotal = $order->items->sum(function($item) {
+                    return $item->unit_price * $item->quantity;
+                });
+                $shipping = $order->shipping_fee ?? 0;
+                $taxRate = $order->tax_rate ?? 0;
+                $taxAmount = $subtotal * ($taxRate / 100);
                 $total = $subtotal + $shipping + $taxAmount;
                 return '₱' . number_format($total, 2);
             })
@@ -60,6 +60,8 @@ class OrdersDataTable extends DataTable
                 'orders.status_id',
                 'orders.placed_at',
                 'orders.updated_at',
+                'orders.shipping_fee',
+                'orders.tax_rate',
                 DB::raw("TRIM(CONCAT(users.first_name, ' ', users.last_name)) as customer_name"),
                 'users.email as customer_email',
                 'order_statuses.status_name',
@@ -72,6 +74,8 @@ class OrdersDataTable extends DataTable
                 'orders.status_id',
                 'orders.placed_at',
                 'orders.updated_at',
+                'orders.shipping_fee',
+                'orders.tax_rate',
                 'users.first_name',
                 'users.last_name',
                 'users.email',

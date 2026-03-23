@@ -17,6 +17,8 @@ return new class extends Migration
             $table->unsignedTinyInteger('payment_method_id');
             $table->unsignedTinyInteger('status_id');
             $table->text('shipping_address');
+            $table->decimal('tax_rate', 8, 4)->nullable();
+            $table->decimal('shipping_fee', 12, 2)->nullable();
             $table->dateTime('placed_at')->useCurrent();
             $table->dateTime('updated_at')->useCurrent()->useCurrentOnUpdate();
 

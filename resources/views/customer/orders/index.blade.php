@@ -432,8 +432,9 @@
             <div style="text-align: right">
               @php
                 $orderSubtotal = $order->items->sum(function($item) { return $item->unit_price * $item->quantity; });
-                $orderShipping = $orderSubtotal > 0 ? $shippingFeeSetting : 0;
-                $orderTax = $orderSubtotal > 0 ? ($orderSubtotal * ($taxRateSetting / 100)) : 0;
+                $orderShipping = $order->shipping_fee ?? 0;
+                $orderTaxRate = $order->tax_rate ?? 0;
+                $orderTax = $orderSubtotal * ($orderTaxRate / 100);
                 $orderTotal = $orderSubtotal + $orderShipping + $orderTax;
               @endphp
               <div class="order-total">₱{{ number_format($orderTotal, 2) }}</div>

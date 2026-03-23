@@ -96,9 +96,13 @@
                         default => 'bg-secondary'
                     };
                     $itemsCount = $order->items->sum('quantity');
-                    $value = $order->items->sum(function($item) {
+                    $subtotal = $order->items->sum(function($item) {
                         return $item->unit_price * $item->quantity;
                     });
+                    $shipping = $order->shipping_fee ?? 0;
+                    $taxRate = $order->tax_rate ?? 0;
+                    $taxAmount = $subtotal * ($taxRate / 100);
+                    $value = $subtotal + $shipping + $taxAmount;
                 @endphp
                 <tr>
                     <td><strong>{{ $order->order_id }}</strong></td>

@@ -152,6 +152,9 @@ class CheckoutController extends Controller
                     'payment_method_id' => $request->payment_method,
                     'status_id' => 1,
                     'shipping_address' => $shippingAddress,
+                    'tax_rate' => $taxRateSetting,
+                    'tax_amount' => $taxAmount,
+                    'shipping_fee' => $shipping,
                     'placed_at' => now(),
                     'updated_at' => now()
                 ]);
