@@ -68,6 +68,7 @@ class UsersDataTable extends DataTable
             $query->where('role_id', $roleId);
         }
 
+        /** @var \Illuminate\Database\Eloquent\Builder $query */
         return $query;
     }
 

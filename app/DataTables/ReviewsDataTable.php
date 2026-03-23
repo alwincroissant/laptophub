@@ -77,13 +77,16 @@ class ReviewsDataTable extends DataTable
 
     public function query(Review $model): QueryBuilder
     {
-        return $model->newQuery()
+        /** @var \Illuminate\Database\Eloquent\Builder $query */
+        $query = $model->newQuery()
             ->with([
                 'user:user_id,first_name,last_name,email',
                 'product:product_id,name',
                 'orderItem:order_item_id,order_id',
                 'orderItem.order:order_id,placed_at',
             ]);
+
+        return $query;
     }
 
     public function html(): HtmlBuilder

@@ -79,6 +79,7 @@ class InventoryDataTable extends DataTable
             $query->where('products.is_archived', false);
         }
 
+        /** @var \Illuminate\Database\Eloquent\Builder $query */
         return $query;
     }
 

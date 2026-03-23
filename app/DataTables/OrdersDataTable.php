@@ -87,6 +87,7 @@ class OrdersDataTable extends DataTable
             $query->where('orders.status_id', $statusId);
         }
 
+        /** @var \Illuminate\Database\Eloquent\Builder $query */
         return $query;
     }
 

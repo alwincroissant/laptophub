@@ -66,7 +66,10 @@ class ProductsDataTable extends DataTable
      */
     public function query(Product $model): QueryBuilder
     {
-        return $model->newQuery()->withTrashed()->with(['category', 'brand']);
+        /** @var \Illuminate\Database\Eloquent\Builder $query */
+        $query = $model->newQuery()->withTrashed()->with(['category', 'brand']);
+
+        return $query;
     }
 
     /**
